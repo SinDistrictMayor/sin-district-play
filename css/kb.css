@@ -1,0 +1,30 @@
+/* Button kit glue. The look is the Artist's kit (assets/ui/buttons/buttons.css, .sd-*, linked before this file).
+   This file: browser resets, the game's state classes (.on/.sel/.dis) mapped onto the kit states, layout overrides where a game component
+   needs a different shape than the kit default (round bar, card actions, phone tiles), and two glue classes for tappables that keep their own art:
+   .sd-map (map markers) and .sd-art (portraits, cards, HUD stat plates): press + focus + disabled only. SD.kit.kbify() assigns the classes. */
+:root{--kb-focus:#6aa7ff}
+/* reset browser defaults */
+button,input,select,textarea{-webkit-appearance:none;appearance:none;margin:0;font:inherit;color:inherit;letter-spacing:inherit;border-radius:0}
+button{background:none;border:0;padding:0;text-align:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+select{background:#15171b;border:1px solid #3a3f46;border-radius:var(--kb-r);min-height:44px;padding:0 36px 0 12px;
+  background-image:linear-gradient(45deg,transparent 50%,#c9ced6 50%),linear-gradient(135deg,#c9ced6 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+input[type=text],input[type=search],input[type=number],textarea{background:#15171b;border:1px solid #3a3f46;border-radius:var(--kb-r);min-height:44px;padding:0 12px}
+input[type=range]{background:transparent}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--kb-focus);outline-offset:2px}
+/* game state classes -> kit states */
+.sd-btn.dis{--bg:linear-gradient(180deg,#1b1d21,#16181b);--bd:#2a2e34;--fg:#6b717a;--hl:rgba(255,255,255,.03);--sh:none;cursor:not-allowed;transform:none;filter:none;opacity:1;border-style:solid}
+.sd-btn.dis small,.sd-btn:disabled small,.sd-btn[aria-disabled=true] small{color:#6b717a!important}
+.sd-choice.dis{--bg:linear-gradient(180deg,#16181b,#131518);--bd:#24282e;--accent:#3a3f46;color:#6b717a;cursor:not-allowed;transform:none;box-shadow:none;opacity:1}
+.sd-choice.on,.sd-choice.sel,.sd-choice[aria-pressed=true],.sd-choice[aria-checked=true]{--bd:#c58b2c;box-shadow:inset 0 0 0 1px #c58b2c,0 0 12px rgba(232,163,61,.25)}
+.sd-tab.on,.sd-tab.sel,.sd-tab[aria-pressed=true]{color:var(--sd-brass-hi)}
+.sd-tab.on::after,.sd-tab.sel::after,.sd-tab[aria-pressed=true]::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:linear-gradient(90deg,#c58b2c,#f6c66b,#c58b2c);box-shadow:0 0 10px rgba(232,163,61,.55)}
+/* tab count badge sits after the label (the kit's absolute badge overlapped long labels such as AMBITIONS) */
+.sd-tab .sd-badge{position:static;margin-left:2px;transform:translateY(-6px)}
+.sd-btn small{font-weight:600;font-size:12px;letter-spacing:0;text-transform:none;opacity:.85}
+.sd-btn-primary small{color:#3d2a0c}
+/* glue classes */
+.sd-map,.sd-art{cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none}
+.sd-map:focus-visible,.sd-art:focus-visible{outline:2px solid var(--kb-focus);outline-offset:2px}
+.sd-art:active{transform:scale(.98)}.sd-map:active{filter:brightness(1.12)}
+.sd-art.dis,.sd-art[aria-disabled=true]{cursor:not-allowed}
+@media (prefers-reduced-motion:reduce){.sd-art:active{transform:none}}

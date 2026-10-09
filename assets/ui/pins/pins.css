@@ -1,12 +1,12 @@
-/* map pins (ui/pins/pins.css) */
-.pin{position:absolute;width:40px;height:49px;transform:translate(-50%,-95.6%);transform-origin:50% 95.6%;animation:pin-in .35s cubic-bezier(.3,1.6,.5,1) both}
-@keyframes pin-in{from{transform:translate(-50%,-95.6%) scale(0)}to{transform:translate(-50%,-95.6%) scale(1)}}
-.pin .pin-timer{transition:stroke-dashoffset 1s linear}
-.pin.is-expiring{color:#c8323a;animation:pin-pulse 1s ease-in-out infinite}
-@keyframes pin-pulse{50%{transform:translate(-50%,-95.6%) scale(1.08)}}
-.pin.is-gone{animation:pin-out .3s ease-in both}
-@keyframes pin-out{to{transform:translate(-50%,-95.6%) scale(0);opacity:0}}
-.marker-drift{transition:transform 2s linear} /* the game moves left/top; heading via rotate */
-.marker-patrol .bar-l{animation:bar 0.6s steps(1) infinite}.marker-patrol .bar-r{animation:bar 0.6s steps(1) infinite reverse}
-@keyframes bar{0%{opacity:1}50%{opacity:.25}}
-@media (prefers-reduced-motion:reduce){.pin,.pin.is-expiring,.pin.is-gone,.marker-patrol .bar-l,.marker-patrol .bar-r{animation:none}.marker-drift{transition:none}}
+/* map opportunity pins (ui/pins/pins.css). Prefix .opin (was .pin, clashed with the location pins). */
+.opin{position:absolute;width:40px;height:49px;transform:translate(-50%,-95.6%);transform-origin:50% 95.6%;animation:opin-in .35s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes opin-in{from{transform:translate(-50%,-95.6%) scale(0)}to{transform:translate(-50%,-95.6%) scale(1)}}
+.opin .opin-timer{transition:stroke-dashoffset 1s linear}
+.opin.is-expiring{color:#c8323a;animation:opin-pulse 1s ease-in-out infinite}
+@keyframes opin-pulse{50%{transform:translate(-50%,-95.6%) scale(1.08)}}
+.opin.is-gone{animation:opin-out .3s ease-in both}
+@keyframes opin-out{to{transform:translate(-50%,-95.6%) scale(0);opacity:0}}
+.opin-marker-drift{transition:transform 2s linear} /* the game moves left/top; heading via rotate */
+.opin-marker-patrol .opin-bar-l{animation:opin-bar 0.6s steps(1) infinite}.opin-marker-patrol .opin-bar-r{animation:opin-bar 0.6s steps(1) infinite reverse}
+@keyframes opin-bar{0%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.opin,.opin.is-expiring,.opin.is-gone,.opin-marker-patrol .opin-bar-l,.opin-marker-patrol .opin-bar-r{animation:none}.opin-marker-drift{transition:none}}

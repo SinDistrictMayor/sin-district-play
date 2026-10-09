@@ -187,21 +187,19 @@ html.kitmode #app{display:none}
 .clockchip b{font-size:15px}.clockchip small{font-size:11px;color:var(--dim,#aaa)}
 .clockchip.night{background:#151b33;border-color:#2c3a6e}.clockchip.low small{color:#ff8a7a}
 .pchip.hrs{background:#23262d;color:#ddd}.pchip.hrs svg{width:13px;height:13px}
-.opin{position:absolute;left:0;top:0;width:40px;height:49px;border:0;background:none;padding:0;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55));cursor:pointer}
-.opin .opb{position:absolute;inset:0;transform-origin:20px 47px;animation:opin-in .35s cubic-bezier(.2,1.4,.4,1) both}
+/* opportunity pins: geometry + animations come from assets/ui/pins/pins.css (.opin, opin-in/pulse/out); only layout extras here */
+.opin{border:0;background:none;padding:0;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.55));cursor:pointer}
+.opin .opb{position:absolute;inset:0}
 .opin .opimg,.opin .opring{position:absolute;left:0;top:0;width:40px;height:49px;pointer-events:none}
 .opin .opi{display:none}
-.opin.noart{width:40px;height:40px;border-radius:50%;border:2px solid currentColor;background:#1a1408}
+.opin.noart{border-radius:50%;border:2px solid currentColor;background:#1a1408;height:40px}
 .opin.noart .opimg{display:none}.opin.noart .opi{display:flex;position:absolute;inset:0;align-items:center;justify-content:center}.opin.noart .opi svg{width:20px;height:20px}.opin.noart .opring{display:none}
 .opin .pin-track{fill:none;stroke:rgba(10,10,12,.35);stroke-width:3}
-.opin .pin-timer{fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.opin .opin-timer{fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
 .opin .opt{position:absolute;right:-10px;top:-4px;min-width:20px;padding:0 4px;border-radius:8px;background:#111;border:1px solid currentColor;color:#f2f2ee;font:800 11px/15px system-ui;text-align:center}
-.opin.is-expiring{color:#c8323a !important}.opin.is-expiring .opb{animation:opin-in .35s both,opin-pulse 1s ease-in-out .35s infinite}
+.opin.is-expiring{color:#c8323a !important}
 .opin.hazard{opacity:.92}
-@keyframes opin-in{from{transform:scale(0)}to{transform:scale(1)}}
-@keyframes opin-pulse{50%{transform:scale(1.08)}}
-html.rm .opin .opb,html.rm .opin.is-expiring .opb{animation:none}
-@media (prefers-reduced-motion:reduce){.opin .opb,.opin.is-expiring .opb{animation:none}}
+html.rm .opin,html.rm .opin.is-expiring{animation:none}
 .opin::before{content:"";position:absolute;left:-3px;right:-3px;top:-2px;bottom:0}
 #whatnow{display:flex;gap:10px;justify-content:center;align-items:flex-end;padding:14px 8px 6px;background:linear-gradient(to bottom,rgba(13,15,18,0) 0,rgba(13,15,18,.92) 25%,#0d0f12 100%);position:relative;overflow-x:auto;scrollbar-width:none;flex:none}
 #whatnow::before{content:"";position:absolute;left:50%;top:4px;width:48px;height:4px;margin-left:-24px;border-radius:2px;background:#2a2f37}
@@ -242,7 +240,8 @@ html.rm #whatnow .s1-wn-in{animation:none}
 .mugwall{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;z-index:1}
 .mugwall::-webkit-scrollbar{display:none}
 .mug{position:relative;flex:0 0 100%;height:100%;scroll-snap-align:center}
-.mugimg{position:absolute;left:50%;bottom:11%;height:66%;width:auto;max-width:none;transform:translateX(-50%);user-select:none;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45));-webkit-mask-image:radial-gradient(ellipse 48% 58% at 50% 46%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 48% 58% at 50% 46%,#000 62%,transparent 100%)}
+.mugimg{position:absolute;left:50%;bottom:11%;height:66%;width:auto;max-width:none;transform:translateX(-50%);user-select:none;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45))}
+.mugimg.cut{left:var(--ox,0px);top:calc(var(--oy,0px) + 40px * var(--k,1));bottom:auto;width:calc(390px * var(--k,1));height:calc(710px * var(--k,1));transform:none;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
 .mugimg.none{display:flex;align-items:center;justify-content:center;width:60%;font-size:64px;color:#666}
 .mugnav{position:absolute;top:40%;width:44px;height:44px;margin-top:-22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;z-index:3}
 .mugnav.prev{left:8px}.mugnav.next{right:8px}.mugnav svg{width:22px;height:22px}
@@ -310,3 +309,9 @@ html.rm .s1-card,html.rm .sbar .sbt i{transition:none}
 @media (max-height:460px){.titlescr.cz-a .placard{width:40%;top:auto;bottom:70px}.czbox .sbody.czb{display:grid;grid-template-columns:1fr 1fr;align-content:start}.czbox .sbody.czb .fan{grid-row:span 2}.rapsheet{--pw:min(60vw,calc((100dvh - 150px) * .739))}}
 #carousel .card{min-width:0;max-width:var(--cw)}   /* intrinsic art/stat widths must never widen a card (person cards grew to 600px) */
 .acts.has-ap .abtn:not(.approach) .arow{flex-wrap:wrap;row-gap:2px}.abtn{min-width:0}
+#whatnow .wn{cursor:pointer;-webkit-tap-highlight-color:transparent}
+#whatnow .wnx{position:absolute;right:-8px;top:-8px;width:44px;height:44px;border:0;background:none;color:#6b7480;font:700 16px/1 system-ui;padding:8px 10px 0 0;text-align:right;vertical-align:top;opacity:.8}
+#whatnow .wnx:active{color:#f2f2ee}
+#whatnow .wnt{right:22px}
+.opin .opcast{position:absolute;left:6px;top:4px;width:28px;height:28px;border-radius:50%;object-fit:cover;z-index:1;pointer-events:none}
+#whatnow .wni.has-cast svg{display:none}#whatnow .wni .wncast{width:30px;height:30px;border-radius:50%;object-fit:cover}
