@@ -1,0 +1,155 @@
+/* ==========================================================================
+   Sin District - COMBAT / Round Screen animation helpers (combat_anim.css)
+   Pure CSS. Motion uses transform + opacity only (no layout properties), so it
+   never causes layout thrash. All motion honors prefers-reduced-motion (see end).
+   Icons stay flat SVG (no filters/gradients inside); any glow here is CSS on the element.
+   Paths in url() are relative to THIS file (ui/combat/).
+
+   HOW TO USE
+   - State + focus classes go on the PORTRAIT WRAPPER (a block that contains the <img>):
+       .unit-dead .unit-ko .unit-fleeing .focus-target .hit-shake .group-slide-in .attacker-lunge
+     The wrapper gets position:relative; overflow:hidden. They use ::before (state tint/skull)
+     and ::after (focus ring) - so a unit can be focused AND dead/fleeing at once.
+   - One-shot FX go on an EMPTY child element placed inside the wrapper (absolutely positioned,
+     pointer-events:none):  .hit-flash .muzzle-flash .crit-burst .armor-spark .miss-puff .dmg-float .xp-plus
+     Add the element (or re-add the class) to play; remove on `animationend`.
+   - Tunables (set on the element or an ancestor): --cb-red, --cb-dur-scale (1 = normal, .5 = 2x speed toggle).
+   ========================================================================== */
+:root {
+  --cb-red: #ff2d2d;        /* bright combat red (dead, focus, damage)            */
+  --cb-red-dark: #6e0f14;   /* fainted / KO                                       */
+  --cb-flee: #e5484d;       /* fleeing tint                                       */
+  --cb-crit: #fff3b0;       /* crit number: yellow-white                           */
+  --cb-heal: #4ade80;       /* heal / xp green                                     */
+  --cb-miss: #9a9aa3;       /* MISS grey                                           */
+  --cb-dur-scale: 1;        /* multiply every duration (2x game speed: .5)         */
+}
+
+/* ---- shared: wrapper needs a positioning context ------------------------- */
+.unit-dead, .unit-ko, .unit-fleeing, .focus-target, .hit-shake, .group-slide-in, .attacker-lunge { position: relative; overflow: hidden; }
+.unit-dead::before, .unit-ko::before, .unit-fleeing::before, .focus-target::after { content: ""; position: absolute; pointer-events: none; }
+.unit-dead > img, .unit-ko > img, .unit-fleeing > img { filter: none; } /* NEVER grayscale a dead unit: stay in full colour under the tint */
+
+/* ---- .dmg-float : floating damage number (put on an empty/inline child; text inside) ------------
+   <span class="dmg-float">-12</span>   variants: .dmg-crit  .dmg-heal  .dmg-miss(text "MISS")  and .xp-plus ("+1")           */
+@keyframes cb-dmg-rise {
+  0%   { transform: translate(-50%, 6px) scale(.55); opacity: 0; }
+  14%  { transform: translate(-50%, -6px) scale(1.3); opacity: 1; }
+  30%  { transform: translate(-50%, -14px) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -64px) scale(1); opacity: 0; }
+}
+.dmg-float, .xp-plus {
+  position: absolute; left: 50%; top: 34%; z-index: 5; pointer-events: none; white-space: nowrap;
+  font: 900 1.7rem/1 Inter, "Noto Sans", system-ui, sans-serif; letter-spacing: .01em;
+  color: var(--cb-red); -webkit-text-stroke: 1.5px rgba(0, 0, 0, .85); paint-order: stroke fill;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .55);
+  will-change: transform, opacity;
+  animation: cb-dmg-rise calc(950ms * var(--cb-dur-scale)) cubic-bezier(.2, .7, .3, 1) 1 forwards;
+}
+.dmg-float.dmg-crit { font-size: 2.5rem; color: var(--cb-crit); animation-duration: calc(1250ms * var(--cb-dur-scale)); text-shadow: 0 0 6px rgba(255, 45, 45, .9), 0 2px 0 rgba(0, 0, 0, .6); }
+.dmg-float.dmg-heal { color: var(--cb-heal); }
+.dmg-float.dmg-miss { color: var(--cb-miss); font-size: 1.15rem; font-weight: 700; letter-spacing: .08em; }
+.xp-plus { top: 6%; font-size: 1.15rem; color: var(--cb-heal); animation-duration: calc(1100ms * var(--cb-dur-scale)); }
+
+/* ---- .hit-flash : white flash overlay on the portrait (~120ms) -------------- */
+@keyframes cb-hit-flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+.hit-flash { position: absolute; inset: 0; z-index: 4; background: #fff; opacity: 0; pointer-events: none;
+  animation: cb-hit-flash calc(120ms * var(--cb-dur-scale)) ease-out 1 forwards; }
+
+/* ---- .hit-shake : portrait jolts when hit (wrapper) ------------------------- */
+@keyframes cb-hit-shake {
+  0%, 100% { transform: translateX(0); } 15% { transform: translateX(-7px) rotate(-1deg); } 35% { transform: translateX(6px) rotate(.8deg); }
+  55% { transform: translateX(-4px); } 75% { transform: translateX(2px); }
+}
+.hit-shake { animation: cb-hit-shake calc(280ms * var(--cb-dur-scale)) ease-out 1; }
+
+/* ---- state overlays on the portrait wrapper --------------------------------
+   DEAD: bright red tint + bright red skull watermark (colour stays on, no grayscale).  */
+@keyframes cb-state-in { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: scale(1); } }
+.unit-dead::before { inset: 0; z-index: 2; background: url("svg/ovl_skull_dead_red.svg") center 52% / 66% auto no-repeat, linear-gradient(rgba(255, 24, 24, .34), rgba(255, 24, 24, .34));
+  animation: cb-state-in calc(320ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .3, 1) both; }
+/* FAINTED / KO: dark red tint + dark red skull */
+.unit-ko::before { inset: 0; z-index: 2; background: url("svg/ovl_skull_ko_darkred.svg") center 52% / 66% auto no-repeat, linear-gradient(rgba(70, 4, 10, .6), rgba(70, 4, 10, .6));
+  animation: cb-state-in calc(320ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .3, 1) both; }
+/* FLEEING: red tinted background with slowly sliding diagonal stripes */
+@keyframes cb-stripe-slide { from { transform: translate(0, 0); } to { transform: translate(24px, 0); } } /* 24px = exactly one stripe period of the 96px tile (seamless loop) */
+.unit-fleeing { background-color: rgba(229, 72, 77, .28); }
+.unit-fleeing::before { left: -24px; top: 0; height: 100%; z-index: 1; width: calc(100% + 24px); background: url("svg/ovl_fleeing_tint_red.svg") 0 0 / 96px 96px repeat;
+  animation: cb-stripe-slide calc(1400ms * var(--cb-dur-scale)) linear infinite; }
+
+/* ---- .focus-target : pulsing red crosshair ring (wrapper; uses ::after) ---- */
+@keyframes cb-focus-pulse { 0%, 100% { transform: scale(1); opacity: .95; } 50% { transform: scale(1.09); opacity: .55; } }
+.focus-target { outline: 2px solid var(--cb-red); outline-offset: -2px; }
+.focus-target::after { inset: 14%; z-index: 3; border: 3px solid var(--cb-red); border-radius: 50%;
+  background:
+    linear-gradient(var(--cb-red), var(--cb-red)) 50% 0 / 3px 24% no-repeat,
+    linear-gradient(var(--cb-red), var(--cb-red)) 50% 100% / 3px 24% no-repeat,
+    linear-gradient(var(--cb-red), var(--cb-red)) 0 50% / 24% 3px no-repeat,
+    linear-gradient(var(--cb-red), var(--cb-red)) 100% 50% / 24% 3px no-repeat;
+  animation: cb-focus-pulse calc(900ms * var(--cb-dur-scale)) ease-in-out infinite; }
+
+/* ---- .group-slide-in : new enemy group enters from the right with a red banner ----
+   <div class="target-group group-slide-in"><div class="group-banner">1 security team appeared ahead</div> ...portraits... </div>
+   Earlier groups: add .group-shift-left to slide them one slot left.                                        */
+@keyframes cb-slide-in { from { transform: translateX(105%); opacity: 0; } 60% { opacity: 1; } to { transform: translateX(0); opacity: 1; } }
+@keyframes cb-banner { 0% { transform: translateX(100%); opacity: 0; } 18% { transform: translateX(0); opacity: 1; } 78% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
+@keyframes cb-shift-left { from { transform: translateX(var(--shift, 40%)); } to { transform: translateX(0); } }
+.group-slide-in { animation: cb-slide-in calc(480ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .2, 1) both; }
+.group-slide-in .group-banner { position: absolute; left: 0; right: 0; top: 0; z-index: 6; padding: .3em .6em; text-align: left; pointer-events: none;
+  font: 800 .78rem/1.2 Inter, "Noto Sans", system-ui, sans-serif; color: #fff; background: var(--cb-red); letter-spacing: .02em;
+  animation: cb-banner calc(2600ms * var(--cb-dur-scale)) ease-out 1 both; }
+.group-shift-left { animation: cb-shift-left calc(420ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .2, 1) both; }
+
+/* ---- .siren-pulse : police siren icon pulsing while readiness is high (on the <svg>/<img>/wrapper) ---- */
+@keyframes cb-siren { 0%, 100% { transform: scale(1); opacity: .72; } 50% { transform: scale(1.14); opacity: 1; } }
+.siren-pulse { color: var(--cb-red); transform-origin: 50% 60%; will-change: transform, opacity; animation: cb-siren calc(700ms * var(--cb-dur-scale)) ease-in-out infinite; }
+.siren-pulse.siren-fast { animation-duration: calc(380ms * var(--cb-dur-scale)); }
+
+/* ---- .readiness-meter : police readiness bar. Drive with --p (0..1) from JS: el.style.setProperty('--p', n/100)
+   <div class="readiness-meter" style="--p:.18"><i class="readiness-fill"></i></div>
+   Levels: .is-warn (>=50) .is-danger (>=80). Fill grows by scaleX (compositor only).                          */
+.readiness-meter { position: relative; height: 10px; border-radius: 6px; overflow: hidden; background: rgba(255, 255, 255, .12); --p: 0; }
+.readiness-fill { position: absolute; inset: 0; background: #f5c542; transform-origin: 0 50%; transform: scaleX(var(--p));
+  transition: transform calc(500ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .2, 1); }
+.readiness-meter.is-warn .readiness-fill { background: #ff8a3d; }
+.readiness-meter.is-danger .readiness-fill { background: var(--cb-red); }
+.readiness-meter.is-danger { animation: cb-siren calc(800ms * var(--cb-dur-scale)) ease-in-out infinite; }
+/* ring variant: ico_siren_ring (inline svg with .ring-track/.ring-meter) */
+.readiness-ring { --p: 0; color: #f5c542; }
+.readiness-ring .ring-track { opacity: .25; }
+.readiness-ring .ring-meter { stroke-dasharray: calc(var(--p) * 100) 100; transition: stroke-dasharray calc(500ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .2, 1); }
+.readiness-ring.is-warn { color: #ff8a3d; } .readiness-ring.is-danger { color: var(--cb-red); }
+/* gauge variant: ico_readiness_gauge (inline svg with .gauge-needle); needle points up = 50% */
+.readiness-gauge { --p: .5; }
+.readiness-gauge .gauge-needle { transform-box: view-box; transform-origin: 24px 36px; transform: rotate(calc(-90deg + var(--p) * 180deg));
+  transition: transform calc(600ms * var(--cb-dur-scale)) cubic-bezier(.3, 1.4, .5, 1); }
+
+/* ---- .attacker-lunge : attacker portrait lunges toward its target (set --lx/--ly in px) ---- */
+@keyframes cb-lunge { 0%, 100% { transform: translate(0, 0) scale(1); } 35% { transform: translate(var(--lx, 0px), var(--ly, -14px)) scale(1.07); } 60% { transform: translate(var(--lx, 0px), var(--ly, -14px)) scale(1.07); } }
+.attacker-lunge { overflow: visible; z-index: 3; animation: cb-lunge calc(320ms * var(--cb-dur-scale)) cubic-bezier(.3, 0, .2, 1) 1; }
+
+/* ---- shot FX overlays (empty child elements, centered; set --fx-x/--fx-y for placement, --fx-rot for angle) ---- */
+.muzzle-flash, .crit-burst, .armor-spark, .miss-puff { position: absolute; z-index: 5; left: var(--fx-x, 50%); top: var(--fx-y, 50%); width: var(--fx-size, 70%); aspect-ratio: 1; pointer-events: none;
+  background: center / contain no-repeat; opacity: 0; will-change: transform, opacity; }
+@keyframes cb-muzzle { 0% { transform: translate(-50%, -50%) rotate(var(--fx-rot, 0deg)) scale(.35); opacity: 1; } 55% { opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(var(--fx-rot, 0deg)) scale(1); opacity: 0; } }
+.muzzle-flash { --fx-size: 60%; background-image: url("svg/fx_muzzle_flash.svg"); animation: cb-muzzle calc(150ms * var(--cb-dur-scale)) ease-out 1 forwards; }
+@keyframes cb-crit { 0% { transform: translate(-50%, -50%) rotate(-12deg) scale(.3); opacity: 1; } 40% { transform: translate(-50%, -50%) rotate(6deg) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(14deg) scale(1.5); opacity: 0; } }
+.crit-burst { --fx-size: 110%; background-image: url("svg/fx_crit_burst.svg"); animation: cb-crit calc(420ms * var(--cb-dur-scale)) cubic-bezier(.2, .8, .3, 1) 1 forwards; }
+@keyframes cb-spark { 0% { transform: translate(-50%, -50%) scale(.4) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.2) rotate(25deg); opacity: 0; } }
+.armor-spark { --fx-size: 60%; background-image: url("svg/fx_armor_spark.svg"); animation: cb-spark calc(260ms * var(--cb-dur-scale)) ease-out 1 forwards; }
+@keyframes cb-puff { 0% { transform: translate(-50%, -50%) scale(.4); opacity: .85; } 100% { transform: translate(-50%, -62%) scale(1.15); opacity: 0; } }
+.miss-puff { --fx-size: 50%; background-image: url("svg/fx_miss_puff.svg"); animation: cb-puff calc(520ms * var(--cb-dur-scale)) ease-out 1 forwards; }
+
+/* ---- reduced motion: no movement, no flashing. Numbers/state still show (opacity only). ---- */
+@media (prefers-reduced-motion: reduce) {
+  .hit-flash, .muzzle-flash, .crit-burst, .armor-spark, .miss-puff { animation: none; opacity: 0; }
+  .hit-shake, .attacker-lunge, .group-shift-left, .siren-pulse, .unit-fleeing::before, .focus-target::after, .readiness-meter.is-danger { animation: none; }
+  .unit-dead::before, .unit-ko::before { animation: none; }
+  .group-slide-in { animation: cb-rm-fade 250ms linear both; }
+  .group-slide-in .group-banner { animation: cb-rm-banner 2600ms linear both; }
+  .dmg-float, .xp-plus { animation: cb-rm-num 1200ms linear 1 forwards; transform: translate(-50%, -12px); }
+  .readiness-fill, .readiness-ring .ring-meter, .readiness-gauge .gauge-needle { transition: none; }
+  @keyframes cb-rm-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes cb-rm-banner { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes cb-rm-num { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+}

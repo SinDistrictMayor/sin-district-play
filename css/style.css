@@ -658,3 +658,72 @@ html.hc{--dim:#cfcfcf;--line:#777}html.hc .btn,html.hc .tile{border-color:#fff}
 .crow.cconf{flex-wrap:wrap;gap:8px}.cconf .cq{flex:1 1 100%;font-size:15px;color:#ddd}.cconf .btn{flex:1;min-height:var(--tap);width:auto;align-items:center;text-align:center}
 .coach.land .ccard{padding:10px;gap:6px}.coach.land .ccard p{font-size:15px;line-height:1.3}.coach.land .ccard .tut,.coach.land .ccard .cic{display:none}
 @media (prefers-reduced-motion:reduce){.pin.cglow .pinin{animation:none}}
+/* ---- Character sheet, graphics-first (sheet kit hooks: .sk-panel / .sk-slot.sk-<slot>.is-empty|.is-active / .sk-cell.is-sel / .sk-bar.sk-hp|skill / .sk-badge).
+   Kit variables (set by kit() from SD_SHEET_KIT): --sk-panel, --sk-slot-<slot>, --sk-slot-<slot>-empty, --sk-cell, --sk-cell-sel, --sk-bar, --sk-bar-hp, --sk-bar-skill ---- */
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.csheet.gfx{gap:12px;background:var(--sk-panel,none) center/cover;border-radius:16px}
+.csheet.gfx .sk-colA,.csheet.gfx .sk-colB{display:flex;flex-direction:column;gap:12px;min-width:0}
+.gfx .chead2.sk-top{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+.gfx .sk-hero{position:relative;height:clamp(170px,26vh,220px);border-radius:16px;overflow:hidden;background:#161616;border:1px solid #3a3a3a}
+.gfx .sk-hero .cportrait{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;font-size:64px;grid-row:auto}
+.gfx .sk-hero .cportrait img{object-fit:cover;object-position:50% 18%}
+.gfx .sk-heroinfo{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 10px;background:linear-gradient(transparent,rgba(0,0,0,.88) 45%)}
+.gfx .sk-heroinfo h3{margin:0;font-size:22px;line-height:1.1;text-shadow:0 2px 6px #000}.gfx .sk-sub{font-size:13px;color:#cfcfcf;margin:2px 0 6px}
+.gfx .hprow{display:flex;align-items:center;gap:8px}.gfx .hprow svg{width:20px;height:20px;color:#ff6a6a;flex:none}.gfx .hprow b{font-size:14px}
+.sk-bar{position:relative;flex:1;height:10px;border-radius:6px;background:var(--sk-bar,#2a2a2a);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.sk-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--sk-bar-skill,linear-gradient(90deg,#d9a441,#ffd23f))}
+.sk-bar.sk-hp i{background:var(--sk-bar-hp,linear-gradient(90deg,#c23131,#ff5c5c))}
+.gfx .sk-fee,.gfx .sk-enr{position:absolute;top:8px;display:flex;align-items:center;gap:4px;font-size:13px;background:rgba(0,0,0,.7);border-radius:10px;padding:3px 8px}
+.gfx .sk-fee{right:8px}.gfx .sk-enr{left:8px}.gfx .sk-fee svg,.gfx .sk-enr svg{width:16px;height:16px}
+.gfx .skrow.sk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gfx .sk{display:grid;grid-template-columns:28px 1fr;grid-template-areas:'i n' 'b b';align-items:center;gap:4px 6px;min-height:44px;padding:4px 8px;background:#141414;border:1px solid #333;border-radius:12px}.gfx .sk .ski{grid-area:i}.gfx .sk b{grid-area:n}.gfx .sk .sk-bar{grid-area:b;height:8px}
+.gfx .sk .ski{width:28px;height:28px;display:grid;place-items:center}.gfx .sk .ski svg{width:26px;height:26px}.gfx .sk b{font-size:15px;text-align:right}
+.gfx .sumrow{gap:6px}.gfx .sum.sk-chip{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;justify-content:center;background:#141414;border:1px solid #333;border-radius:12px}
+.gfx .sum.sk-chip svg{width:22px;height:22px}.gfx .sum.sk-chip b{font-size:13px}
+.gfx .slots5.sk-gear{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(84px,auto);gap:8px}
+.gfx .sk-slot{aspect-ratio:auto;min-height:84px;padding:6px;border-radius:14px;justify-content:flex-end;overflow:hidden;background:#141414 var(--sk-slot-bg,none) center/100% 100%;border:1px solid #3a3a3a}
+.gfx .sk-primary{grid-column:1/5;grid-row:1/3}.gfx .sk-melee{grid-column:5/7;grid-row:1}.gfx .sk-armor{grid-column:5/7;grid-row:2}.gfx .sk-util1{grid-column:1/4}.gfx .sk-util2{grid-column:4/7}
+.gfx .sk-primary{--sk-slot-bg:var(--sk-slot-primary,none)}.gfx .sk-melee{--sk-slot-bg:var(--sk-slot-melee,none)}.gfx .sk-armor{--sk-slot-bg:var(--sk-slot-armor,none)}.gfx .sk-util1,.gfx .sk-util2{--sk-slot-bg:var(--sk-slot-util,none)}
+.gfx .sk-slot.full{background-color:#1b1b1b;border-color:#6d6d6d}.gfx .sk-slot.is-active{outline:3px solid var(--accent,#fff);outline-offset:1px}
+.gfx .sk-slot .iart{position:absolute;inset:6px 6px 26px;width:auto;height:auto;display:grid;place-items:center}
+.gfx .sk-slot .iart img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}.gfx .sk-slot .iart svg{width:46%;height:46%}
+.gfx .sk-ghost{position:absolute;inset:6px 6px 26px;display:grid;place-items:center;opacity:.28}.gfx .sk-ghost img,.gfx .sk-ghost svg{max-width:60%;max-height:80%;object-fit:contain}
+.gfx .sk-slab{position:relative;display:flex;align-items:center;gap:4px;width:100%;min-width:0}.gfx .sk-slab svg{width:16px;height:16px;flex:none;opacity:.8}
+.gfx .sk-slot small.sl{font-size:12px;text-align:left;flex:1}
+.gfx .sk-badge,.sk-badge{position:absolute;top:5px;right:5px;font-size:12px;font-style:normal;font-weight:800;background:rgba(0,0,0,.78);border:1px solid #555;border-radius:8px;padding:0 5px;line-height:18px}
+.sk-badge.u{top:auto;bottom:5px}
+.gfx .pack3.sk-grid{grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(64px,auto);gap:6px}
+.gfx .sk-cell{min-height:64px;padding:4px;justify-content:center;border-radius:12px;background:#171717 var(--sk-cell,none) center/100% 100%;aspect-ratio:auto}
+.gfx .sk-cell.is-sel{outline:3px solid var(--accent,#fff);outline-offset:1px;background-image:var(--sk-cell-sel,none)}
+.gfx .sk-cell .iart{width:100%;height:100%;min-height:52px;display:grid;place-items:center}.gfx .sk-cell .iart img{width:100%;height:100%;max-height:96px;object-fit:contain;display:block}.gfx .sk-cell .iart svg{width:50%;height:50%}
+.gfx .cell.empty{min-height:64px}
+.sk-tip{position:absolute;z-index:5;max-width:240px;background:#000;color:#fff;border:1px solid #888;border-radius:10px;padding:6px 10px;font-size:13px;pointer-events:none;box-shadow:0 6px 18px #000}
+@media (orientation:landscape) and (max-height:600px){
+  .csheet.gfx{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);align-items:start}
+  .gfx .sk-hero{height:150px}.gfx .slots5.sk-gear{grid-auto-rows:minmax(70px,auto)}.gfx .pack3.sk-grid{grid-template-columns:repeat(5,1fr)}
+}
+@media (max-width:370px){.gfx .sk-hero{height:170px}.gfx .pack3.sk-grid{grid-template-columns:repeat(3,1fr)}}
+.gfx .sk-slot .iart.wh{inset:0 0 26px}.gfx .sk-slot .iart.wh img{object-fit:cover;border-radius:13px 13px 0 0;filter:none}
+.gfx .sk-cell .iart.wh img{object-fit:cover;border-radius:9px}
+
+/* ---- ART-11 sheet kit (assets/ui/sheet/sheet_kit.json): frames as 9-slice border-images, stat bars, panel ---- */
+.csheet.gfx{padding:12px;background:#0d0f12 url(../assets/ui/sheet/panel_bg.webp) top center/100% auto no-repeat,url(../assets/ui/sheet/panel_bg_tile.webp) 0 0/256px repeat}
+@media (min-resolution:1.5dppx){.csheet.gfx{background:#0d0f12 url(../assets/ui/sheet/panel_bg_2x.webp) top center/100% auto no-repeat,url(../assets/ui/sheet/panel_bg_tile_2x.webp) 0 0/256px repeat}}
+.gfx .sk-slot{background:none;border:13px solid transparent;border-radius:0;padding:0;border-image:var(--frame) 26 fill / 13px stretch}
+.gfx .sk-slot.is-empty{border-image:var(--frame) 26 / 13px stretch;background:rgba(0,0,0,.35)}
+.gfx .sk-slot.is-active{outline:0;border-image:var(--frame-on) 26 fill / 13px stretch}
+.gfx .sk-primary{--frame:url(../assets/ui/sheet/slot_primary_2x.png);--frame-on:url(../assets/ui/sheet/slot_primary_active_2x.png)}
+.gfx .sk-melee{--frame:url(../assets/ui/sheet/slot_melee_2x.png);--frame-on:url(../assets/ui/sheet/slot_melee_active_2x.png)}
+.gfx .sk-armor{--frame:url(../assets/ui/sheet/slot_armor_2x.png);--frame-on:url(../assets/ui/sheet/slot_armor_active_2x.png)}
+.gfx .sk-util1,.gfx .sk-util2{--frame:url(../assets/ui/sheet/slot_util_2x.png);--frame-on:url(../assets/ui/sheet/slot_util_active_2x.png)}
+.gfx .sk-slot .iart,.gfx .sk-ghost{inset:0 0 22px}.gfx .sk-slot .iart.wh{inset:0 0 22px}.gfx .sk-slot .iart.wh img{border-radius:2px}
+.gfx .sk-slot .sk-badge{top:2px;right:2px}
+.gfx .pack3.sk-grid{border:16px solid transparent;border-image:url(../assets/ui/sheet/bp_grid_frame_2x.png) 32 fill / 16px stretch;padding:2px}
+.gfx .sk-cell{background:none;border:8px solid transparent;border-radius:0;padding:0;border-image:url(../assets/ui/sheet/bp_tile_2x.png) 16 fill / 8px stretch}
+.gfx .sk-cell:hover,.gfx .sk-cell:focus-visible{border-image-source:url(../assets/ui/sheet/bp_tile_hover_2x.png)}
+.gfx .sk-cell.is-sel{outline:0;border-image-source:url(../assets/ui/sheet/bp_tile_selected_2x.png)}
+.gfx .sk-cell .iart{min-height:44px}.gfx .sk-cell .sk-badge{top:-4px;right:-4px}.gfx .sk-cell .sk-badge.u{top:auto;bottom:-4px}
+.sk-bar{height:18px;flex:1;border:solid transparent;border-width:4px 10px;border-radius:0;background:none;box-shadow:none;border-image:url(../assets/ui/sheet/stat_bar_frame_2x.png) 8 20 fill / 4px 10px stretch}
+.sk-bar i{border-radius:1px;background:url(../assets/ui/sheet/stat_fill_generic_2x.png) 0 0/100% 100% no-repeat}
+.sk-bar.sk-hp i{background-image:url(../assets/ui/sheet/stat_fill_hp_2x.png)}
+.gfx .sk .sk-bar{height:18px}
