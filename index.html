@@ -13,8 +13,8 @@
 <script>if(/^http/.test(location.protocol)){var l=document.createElement("link");l.rel="manifest";l.href="manifest.webmanifest";document.head.appendChild(l)}</script>
 <title>Sin District</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/kit.css">
 <link rel="stylesheet" href="assets/ui/anim.css">
-<link rel="stylesheet" href="assets/ui/coach/coach.css">
 <link rel="preload" as="script" href="dist/core.min.js">
 <link rel="preload" as="script" href="dist/content.gz.js">
 </head>
@@ -23,6 +23,7 @@
   <div id="stage">
     <header id="topbar">
       <div id="cityname">RUTLAND, VT</div>
+      <button id="leadchip" type="button" hidden aria-label="Leads"></button>
       <div id="zoomctl" role="group" aria-label="Map zoom">
         <button id="zin" class="zbtn" aria-label="Zoom in">+</button>
         <button id="zout" class="zbtn" aria-label="Zoom out">&minus;</button>
