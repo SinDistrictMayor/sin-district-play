@@ -104,3 +104,25 @@ html.kitmode #app{display:none}
 @media (min-width:600px){.radios.k-tiles .rad.k-tile .k-tv small{display:block}}
 .radios.k-tiles .rad.k-tile{column-gap:5px;padding:5px 6px}
 @media (max-width:380px){.radios.k-tiles .rad.k-tile .k-tv b{font-size:13px;text-overflow:clip}}
+
+/* ---- RW-P-02/04/07 encounters + prologue ---- */
+.acts.has-ap{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.acts.has-ap .approach{grid-column:1/-1;border-color:var(--k-accent,#e8b54a);background:linear-gradient(180deg,#2a2213,#1c1c1c)}
+.acts.has-ap .abtn:not(.approach) small{display:none}
+.acts.has-ap .abtn:not(.approach) .at{font-size:13px}
+.rs-top.bd{background-size:cover;background-position:center;border-radius:10px;padding-top:6px;padding-bottom:6px}
+.ru .socb{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.ru .sb{display:flex;align-items:center;gap:4px;font-size:12px;line-height:1}
+.ru .sb svg{width:14px;height:14px;flex:none}
+.ru .sb .sbt{flex:1;height:6px;border-radius:3px;background:#1a1a1a;overflow:hidden;min-width:28px}
+.ru .sb .sbt i{display:block;height:100%;transform-origin:0 50%;transition:transform .28s}
+.ru .sb.trust .sbt i{background:#7fd3ff}.ru .sb.nerve .sbt i{background:#b18cff}
+.ru .sb b{font-size:12px;min-width:10px;text-align:right}
+.ru .mood{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.7);display:grid;place-items:center}
+.ru .mood svg{width:18px;height:18px}
+.ru .mood.hostile{color:#ff6b5b}.ru .mood.wary{color:#f0c060}.ru .mood.calm{color:#6fdc8c}
+.ru{position:relative}
+.cportrait.half img{object-fit:cover;object-position:50% 12%}
+#title .pseg{display:flex;align-items:center;gap:6px;margin:8px 0}
+#title .pseg>.small{margin-right:4px}
+@media (max-height:520px){.acts.has-ap{grid-template-columns:repeat(3,minmax(0,1fr))}.acts.has-ap .approach{grid-column:auto}.acts.has-ap .abtn small{display:none}.acts.has-ap .abtn .at{font-size:13px}}
