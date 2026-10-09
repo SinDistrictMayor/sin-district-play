@@ -1,0 +1,11 @@
+/* RW-A-12 juice keyframes (ui/kit/juice.css). Respect prefers-reduced-motion. */
+.juice-pop{animation:juice-pop .9s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes juice-pop{0%{transform:translateY(8px) scale(.6);opacity:0}18%{transform:translateY(0) scale(1.12);opacity:1}35%{transform:scale(1)}75%{transform:translateY(-14px);opacity:1}100%{transform:translateY(-22px);opacity:0}}
+.juice-stamp{animation:juice-stamp .38s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes juice-stamp{0%{transform:scale(1.9) rotate(-14deg);opacity:0}60%{transform:scale(.94) rotate(-8deg);opacity:1}100%{transform:scale(1) rotate(-8deg)}}
+.juice-stamp-text{transform:rotate(-8deg)} /* the word sits on the stamp at the same -8deg */
+.juice-badge{animation:juice-badge 1.6s ease-in-out 2}
+@keyframes juice-badge{0%,100%{box-shadow:0 0 0 0 #e0b44a00}50%{box-shadow:0 0 0 6px #e0b44a44}}
+.juice-speed{pointer-events:none;position:absolute;inset:0;background-size:cover;background-position:50% 45%;animation:juice-speed .12s steps(2) infinite alternate}
+@keyframes juice-speed{from{transform:scale(1);opacity:.85}to{transform:scale(1.035);opacity:1}}
+@media (prefers-reduced-motion:reduce){.juice-pop,.juice-stamp,.juice-badge,.juice-speed{animation:none}}

@@ -1,0 +1,28 @@
+/* S1 creator + map keyframes (creator/creator.css). transform/opacity only; prefers-reduced-motion respected. */
+/* camera flash: full-screen overlay creator/flash_burst.png, re-trigger per swipe */
+.s1-flash{position:absolute;inset:0;pointer-events:none;background:url(flash_burst_2x.png) 50% 36%/cover no-repeat;opacity:0;animation:s1-flash .42s ease-out both}
+@keyframes s1-flash{0%{opacity:0}8%{opacity:1}22%{opacity:.95}100%{opacity:0}}
+.s1-flash-portrait{animation:s1-flash-portrait .42s ease-out both}
+@keyframes s1-flash-portrait{0%{transform:scale(1.04)}100%{transform:scale(1)}}
+/* origin cards: fanned hand + 3D flip */
+.s1-hand{position:relative;perspective:1000px}
+.s1-card{width:240px;height:336px;position:absolute;transform-origin:50% 140%;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.9,.3,1.15)}
+.s1-card .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px}
+.s1-card .front{transform:rotateY(180deg)}
+.s1-card.is-flipped{transform:var(--fan) translateY(-36px) scale(1.06) rotateY(180deg)}
+.s1-card{transform:var(--fan)} /* --fan: rotate(calc((var(--i) - var(--mid)) * 7deg)) translateY(calc(abs(var(--i) - var(--mid)) * 10px)) */
+.s1-fan-in{animation:s1-fan-in .55s cubic-bezier(.2,1.2,.4,1) both;animation-delay:calc(var(--i) * 45ms)}
+@keyframes s1-fan-in{from{transform:translateY(120%) rotate(0);opacity:0}to{transform:var(--fan);opacity:1}}
+/* rap sheet / ID assembly */
+.s1-photo-drop{animation:s1-photo-drop .45s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes s1-photo-drop{0%{transform:translateY(-60px) rotate(-6deg) scale(1.1);opacity:0}70%{transform:translateY(3px) rotate(1deg) scale(.99);opacity:1}100%{transform:none}}
+.s1-stamp{--rot:-6deg;transform:rotate(var(--rot));animation:s1-stamp .34s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.5s + var(--i, 0) * .32s)}
+@keyframes s1-stamp{0%{transform:scale(2.2) rotate(calc(var(--rot) - 10deg));opacity:0}55%{transform:scale(.92) rotate(var(--rot));opacity:1}75%{transform:scale(1.03) rotate(var(--rot))}100%{transform:scale(1) rotate(var(--rot))}}
+.s1-stamp-drop{--rot:-8deg;transform:rotate(var(--rot));animation:s1-stamp-drop .5s cubic-bezier(.5,0,.6,1.4) both;animation-delay:calc(.5s + var(--i, 0) * .32s)}
+@keyframes s1-stamp-drop{0%{transform:translateY(-240px) rotate(calc(var(--rot) + 14deg));opacity:0}60%{transform:translateY(0) rotate(var(--rot));opacity:1}78%{transform:translateY(-8px) rotate(var(--rot))}100%{transform:rotate(var(--rot))}}
+.s1-shake{animation:s1-shake .18s linear} /* add to the paper at each stamp impact */
+@keyframes s1-shake{25%{transform:translate(2px,-1px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,1px)}}
+/* What-Now strip */
+.s1-wn-in{animation:s1-wn-in .4s cubic-bezier(.2,1.2,.4,1) both;animation-delay:calc(var(--i, 0) * 70ms)}
+@keyframes s1-wn-in{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.s1-flash{animation-duration:.01s;opacity:0}.s1-flash-portrait,.s1-fan-in,.s1-photo-drop,.s1-stamp,.s1-stamp-drop,.s1-shake,.s1-wn-in{animation:none}.s1-card{transition:none}}
