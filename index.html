@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="assets/icons/app/icon.svg">
+<link rel="apple-touch-icon" href="assets/icons/app/apple-touch-icon.png">
+<meta name="theme-color" content="#050505">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sin District">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Sin District</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="assets/ui/anim.css">
+<link rel="stylesheet" href="assets/ui/coach/coach.css">
+<link rel="preload" as="script" href="dist/core.min.js">
+<link rel="preload" as="script" href="dist/content.gz.js">
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <header id="topbar">
+      <div id="cityname">RUTLAND, VT</div>
+      <div id="zoomctl" role="group" aria-label="Map zoom">
+        <button id="zin" class="zbtn" aria-label="Zoom in">+</button>
+        <button id="zout" class="zbtn" aria-label="Zoom out">&minus;</button>
+        <button id="zfit" class="zbtn" aria-label="Fit city to screen">&#9635;</button>
+      </div>
+    </header>
+
+    <main id="map" aria-label="City map. Drag to pan, pinch or use plus and minus to zoom." tabindex="0">
+      <div id="world"><img id="mapimg" src="assets/map/rutland_map_realistic.webp" onerror="this.onerror=null;this.src='assets/map/rutland_map.svg'" alt="" draggable="false" decoding="async"></div>
+      <div id="pins"></div>
+    </main>
+
+    <div id="sheet" class="layer" hidden role="dialog" aria-modal="true" aria-labelledby="sheettitle">
+      <div class="sheetbox">
+        <div class="sheethead" id="sheethead">
+          <div class="sheettitles"><h2 id="sheettitle"></h2><span id="sheetbadge" class="badge" hidden></span></div>
+          <button id="sheetclose" class="x" aria-label="Close">&times;</button>
+        </div>
+        <div id="decktabs" role="tablist" hidden></div>
+        <div id="carousel" tabindex="-1" aria-label="Cards. Swipe sideways."></div>
+        <button id="navprev" class="nav" aria-label="Previous card">&#8249;</button>
+        <button id="navnext" class="nav" aria-label="Next card">&#8250;</button>
+        <div id="dots" aria-hidden="true"></div>
+        <div id="resultdrawer" hidden></div>
+      </div>
+    </div>
+
+    <div id="modal" class="layer" hidden role="dialog" aria-modal="true" aria-labelledby="modaltitle">
+      <div class="modalbox">
+        <div class="sheethead"><h2 id="modaltitle"></h2><button id="modalclose" class="x" aria-label="Close">&times;</button></div>
+        <div id="modalbody"></div>
+      </div>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <section id="hud" aria-label="Status">
+    <div id="left">
+      <div class="r1">
+        <button id="wantedbtn" class="wanted" type="button" aria-label="Wanted level">
+          <span class="wic"></span><b id="wantednum" class="num">0</b>
+          <span id="wantedbar" role="meter" aria-label="Wanted level" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0"><i id="wantedfill"></i></span>
+        </button>
+        <div class="stat cashbox"><span class="sic" data-ic="coin"></span><div class="sv"><span class="lbl">Cash</span><b id="cash" class="num">$0</b></div></div>
+      </div>
+      <div class="stat debtrow">
+        <span class="sic red" data-ic="debt"></span>
+        <div class="dwrap"><span class="lbl">Debt</span><b id="debt" class="num red">$0</b></div>
+        <button id="paydebt" class="pay" type="button"><span class="pi" data-ic="coin"></span><span class="pt">Pay</span><small id="paysub">up to $0</small></button>
+      </div>
+      <div class="r3">
+        <div class="daybox"><div class="sv"><div class="dl"><span class="lbl">Day</span> <b id="day" class="num">1</b></div><small id="duein" class="due num"></small></div></div>
+        <button id="hourbtn" class="ibtn big" type="button" aria-label="End day"></button>
+        <button id="phonebtn" class="ibtn" type="button" aria-label="Phone"><span id="phonedot" hidden></span></button>
+      </div>
+    </div>
+    <div id="crew">
+      <div id="crewgrid"></div>
+    </div>
+  </section>
+
+  <div id="screen" class="layer" hidden role="dialog" aria-modal="true"></div>
+</div>
+<noscript>Sin District needs JavaScript.</noscript>
+<script>window.SD_LATE="dist/late.min.js";window.SD_DEBUG="dist/debug.min.js";
+/* content ships gzip+base64 (about 160 KB instead of 690 KB, no server compression needed, works from file://); plain fallback if DecompressionStream is missing */
+(function () {
+  var d = document;
+  function inject(src, cb) { var s = d.createElement("script"); s.src = src; s.async = false; s.onload = cb; s.onerror = function () { d.body.insertAdjacentHTML("afterbegin", "<p style='color:#fff;padding:12px'>Could not load " + src + ". Reload the page.</p>"); }; d.body.appendChild(s); }
+  function start() { inject("dist/core.min.js"); }
+  function plain() { inject("dist/content.min.js", start); }
+  if (!window.DecompressionStream || !window.Response || !window.Blob) return plain();
+  inject("dist/content.gz.js", function () {
+    try {
+      var b = atob(window.SD_CONTENT_GZ), u = new Uint8Array(b.length), i; for (i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); window.SD_CONTENT_GZ = null;
+      new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).text().then(function (t) { window.SD_CONTENT = JSON.parse(t); start(); }, plain);
+    } catch (e) { plain(); }
+  });
+})();
+</script>
+</body>
+</html>

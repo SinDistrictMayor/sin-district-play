@@ -1,0 +1,76 @@
+/* Sin District - UI animation helpers. Pure CSS; the SVG icons stay flat (no filters/gradients inside them).
+   Glow = CSS drop-shadow on the <svg>/<img> element, tinted via `color` or --glow.
+   Usage: add a class to the element (or its wrapper); remove it (animationend) or re-add to replay.
+   All motion is disabled under prefers-reduced-motion. */
+:root {
+  --sd-yellow: #f5c542; --sd-red: #e5484d; --sd-white: #f4f4f6; --sd-teal: #4fb3a9; --sd-grey: #8a8a92;
+  --glow: var(--sd-white);
+}
+.ico { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex: none; }
+.ico-glow  { filter: drop-shadow(0 0 4px var(--glow)) drop-shadow(0 0 10px var(--glow)); }
+.ico-yellow { color: var(--sd-yellow); --glow: var(--sd-yellow); }
+.ico-red    { color: var(--sd-red);    --glow: var(--sd-red); }
+.ico-white  { color: var(--sd-white);  --glow: var(--sd-white); }
+.ico-teal   { color: var(--sd-teal);   --glow: var(--sd-teal); }
+
+/* coin spin (use on a <svg class="ico">: flips around the vertical axis) */
+@keyframes sd-coin-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+.anim-coin-spin { animation: sd-coin-spin 900ms cubic-bezier(.4, 0, .2, 1) 1; transform-style: preserve-3d; }
+.anim-coin-spin-loop { animation: sd-coin-spin 1600ms linear infinite; }
+
+/* cash count-up pop: toggle on the number element every time the value changes (JS counts the digits up over ~600ms) */
+@keyframes sd-pop { 0% { transform: scale(1); } 35% { transform: scale(1.28); } 100% { transform: scale(1); } }
+.anim-cash-pop { animation: sd-pop 420ms cubic-bezier(.2, .8, .3, 1.4) 1; display: inline-block; transform-origin: 50% 60%; }
+.anim-cash-gain { animation: sd-pop 420ms ease-out 1, sd-tint-gain 900ms ease-out 1; }
+.anim-cash-loss { animation: sd-shake-x 360ms ease-out 1, sd-tint-loss 900ms ease-out 1; }
+@keyframes sd-tint-gain { 0% { color: var(--sd-yellow); } 100% { color: inherit; } }
+@keyframes sd-tint-loss { 0% { color: var(--sd-red); } 100% { color: inherit; } }
+@keyframes sd-shake-x { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+
+/* hit flash + burst (put .fx-hit on the card/portrait, .fx-burst on an absolutely positioned child) */
+@keyframes sd-hit-flash { 0% { filter: brightness(2.4) saturate(.4); } 100% { filter: none; } }
+.fx-hit { animation: sd-hit-flash 220ms ease-out 1; }
+.fx-hit-shake { animation: sd-hit-flash 220ms ease-out 1, sd-shake-x 260ms ease-out 1; }
+@keyframes sd-burst { 0% { transform: translate(-50%, -50%) scale(.2); opacity: .95; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+.fx-burst { position: absolute; left: 50%; top: 50%; width: 5.5rem; height: 5.5rem; border-radius: 50%; pointer-events: none;
+  border: 3px solid var(--sd-white); box-shadow: 0 0 18px var(--sd-white); animation: sd-burst 380ms ease-out 1 forwards; }
+.fx-burst.red { border-color: var(--sd-red); box-shadow: 0 0 18px var(--sd-red); }
+.fx-burst.yellow { border-color: var(--sd-yellow); box-shadow: 0 0 18px var(--sd-yellow); }
+
+/* damage numbers: absolutely position an element with .dmg over the target, it floats up and fades out */
+@keyframes sd-dmg-float { 0% { transform: translate(-50%, 0) scale(.6); opacity: 0; } 15% { transform: translate(-50%, -8px) scale(1.25); opacity: 1; }
+  100% { transform: translate(-50%, -54px) scale(1); opacity: 0; } }
+.dmg { position: absolute; left: 50%; top: 30%; pointer-events: none; font: 800 1.5rem/1 Inter, "Noto Sans", system-ui, sans-serif;
+  color: var(--sd-white); -webkit-text-stroke: 1px rgba(0, 0, 0, .8); text-shadow: 0 0 8px rgba(0, 0, 0, .9); animation: sd-dmg-float 900ms ease-out 1 forwards; }
+.dmg.hit  { color: var(--sd-red); }
+.dmg.crit { color: var(--sd-yellow); font-size: 2rem; animation-duration: 1100ms; }
+.dmg.heal { color: var(--sd-teal); }
+.dmg.miss { color: var(--sd-grey); font-weight: 600; font-size: 1.1rem; }
+
+/* hourglass: gentle sand pulse while time is passing; flip when a day ends */
+@keyframes sd-sand { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes sd-flip { from { transform: rotate(0deg); } to { transform: rotate(180deg); } }
+.anim-hourglass { animation: sd-sand 1400ms ease-in-out infinite; }
+.anim-hourglass-flip { animation: sd-flip 500ms cubic-bezier(.5, 0, .2, 1) 1 forwards; }
+
+/* attention pulses: wanted (red), debt due (red), unlock (yellow) */
+@keyframes sd-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.anim-pulse { animation: sd-pulse 1100ms ease-in-out infinite; }
+.anim-pulse-fast { animation: sd-pulse 600ms ease-in-out infinite; }
+.anim-wanted { color: var(--sd-red); --glow: var(--sd-red); animation: sd-pulse 800ms ease-in-out infinite; filter: drop-shadow(0 0 6px var(--sd-red)); }
+.anim-shake { animation: sd-shake-x 360ms ease-out 1; }
+@keyframes sd-check-pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+.anim-check-pop { animation: sd-check-pop 360ms ease-out 1 both; }
+/* stroke-draw (for checkmarks/ticks): works on the <path> inside a symbol instance when inlined */
+@keyframes sd-draw { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+.anim-draw path { stroke-dasharray: 30; animation: sd-draw 420ms ease-out 1 forwards; }
+
+/* event banner slide-in (top of screen) */
+@keyframes sd-banner-in { from { transform: translateY(-110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes sd-banner-out { to { transform: translateY(-110%); opacity: 0; } }
+.anim-banner-in { animation: sd-banner-in 320ms cubic-bezier(.2, .9, .3, 1) 1 both; }
+.anim-banner-out { animation: sd-banner-out 240ms ease-in 1 forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="anim-"], .fx-hit, .fx-hit-shake, .fx-burst, .dmg { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}
