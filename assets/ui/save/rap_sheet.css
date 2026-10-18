@@ -1,0 +1,9 @@
+/* V3 #1 optional rap-sheet save card (ui/save/rap_sheet.json). All text is live; slot boxes are @1x px on a 340x204 card. */
+.sd-rap{position:relative;width:340px;height:204px;background:url(rap_sheet_card_2x.png) 0 0/100% 100%;font-family:"Barlow Condensed",sans-serif;color:#1d1e22;transform:rotate(-1.2deg)}
+.sd-rap .ph{position:absolute;left:16px;top:22px;width:104px;height:132px;object-fit:cover;object-position:50% 30%;filter:grayscale(.4) brightness(1.35) contrast(1.08) sepia(.15)}
+.sd-rap .hd{position:absolute;left:12px;top:0;height:13px;font:700 9px/13px Inter,sans-serif;letter-spacing:.18em;color:#e8e2d2;text-transform:uppercase}
+.sd-rap .nm{position:absolute;left:134px;top:30px;width:192px;font:900 22px/22px "Barlow Condensed";letter-spacing:.04em;text-transform:uppercase}
+.sd-rap .f{position:absolute;left:134px;width:192px;font:700 15px/16px "Barlow Condensed"}.sd-rap .f i{font:600 8px/1 Inter;letter-spacing:.12em;opacity:.6;position:absolute;top:-10px;left:26px;font-style:normal;text-transform:uppercase}
+.sd-rap .f1{top:66px}.sd-rap .f2{top:92px}.sd-rap .f3{top:118px;width:64px}
+.sd-rap .st{position:absolute;left:186px;top:143px;width:80px;text-align:center;transform:rotate(-14deg);font:900 15px/18px "Barlow Condensed";letter-spacing:.1em;color:#c43b3b;opacity:.85}
+.sd-rap .ft{position:absolute;left:16px;top:168px;font:600 10px/18px Inter;letter-spacing:.06em;opacity:.7}

@@ -1,0 +1,73 @@
+/* Sin District V3 main menu skin (ui/menu/menu.css). Builds on the kit (ui/buttons/buttons.css, .sd-*): link it after buttons.css.
+   .sd-menu-tag            big evidence-tag button (red). Add .sd-menu-brass for the brass tag (e.g. NEW GAME when CONTINUE is primary).
+   .sd-menu-icon           52px round brass icon button (Settings, Credits, Guide, Sound). Put a 24px glyph from icons/*.svg inside.
+   States: :active/.is-pressed = pressed, :disabled/.is-disabled = disabled, :focus-visible/.is-highlighted = highlighted (keyboard focus or the suggested choice).
+   Art is the 9-slice frames in frames/ (2x), drawn with border-image; the label is live text. Tap target >= 52px. Motion: transform/opacity only. */
+.sd-menu-tag{--f:url(frames/tag_red_normal_2x.png);--fg:#ffe2c4;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  width:100%;max-width:300px;min-height:60px;margin:0 auto;padding:0 18px 0 54px;border:0;background:none;color:var(--fg);
+  border-style:solid;border-image-source:var(--f);border-image-slice:56 52 64 120 fill;border-image-width:28px 26px 32px 60px;border-image-outset:10px 10px 14px 10px;border-image-repeat:stretch;
+  font:800 22px/1 "Barlow Condensed","Inter Tight",Inter,"Noto Sans",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
+  text-shadow:0 1px 0 rgba(0,0,0,.45),0 0 1px rgba(0,0,0,.6);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;outline:none;
+  transition:transform .08s ease-out,filter .12s}
+.sd-menu-tag .sub{display:block;margin-top:3px;font:600 12px/1 Inter,"Noto Sans",system-ui,sans-serif;letter-spacing:.04em;text-transform:none;opacity:.85}
+.sd-menu-tag>span{display:flex;flex-direction:column;align-items:center}
+.sd-menu-tag:active,.sd-menu-tag.is-pressed{--f:url(frames/tag_red_pressed_2x.png);--fg:#f0cdb0;transform:translateY(2px)}
+.sd-menu-tag:focus-visible,.sd-menu-tag.is-highlighted{--f:url(frames/tag_red_highlighted_2x.png);--fg:#fff3e0}
+.sd-menu-tag:disabled,.sd-menu-tag.is-disabled{--f:url(frames/tag_red_disabled_2x.png);--fg:#8b8078;cursor:not-allowed;transform:none;text-shadow:none}
+.sd-menu-tag.sd-menu-brass{--f:url(frames/tag_brass_normal_2x.png);--fg:#1a1206;text-shadow:0 1px 0 rgba(255,240,200,.45)}
+.sd-menu-tag.sd-menu-brass:active,.sd-menu-tag.sd-menu-brass.is-pressed{--f:url(frames/tag_brass_pressed_2x.png)}
+.sd-menu-tag.sd-menu-brass:focus-visible,.sd-menu-tag.sd-menu-brass.is-highlighted{--f:url(frames/tag_brass_highlighted_2x.png);--fg:#120c03}
+.sd-menu-tag.sd-menu-brass:disabled,.sd-menu-tag.sd-menu-brass.is-disabled{--f:url(frames/tag_brass_disabled_2x.png);--fg:#7e7566;text-shadow:none}
+.sd-menu-tag.sd-menu-sm{min-height:52px;max-width:240px;font-size:18px}
+.sd-menu-icon{--f:url(frames/icon_round_normal_2x.png);position:relative;display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:0;
+  background:var(--f) center/72px 72px no-repeat;background-position:-10px -8px;background-size:72px 72px;color:#f6d48a;cursor:pointer;outline:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .08s ease-out}
+.sd-menu-icon::before{content:"";position:absolute;inset:-8px -10px -12px -10px;background:var(--f) center/100% 100% no-repeat}
+.sd-menu-icon{background:none}
+.sd-menu-icon svg,.sd-menu-icon img{position:relative;width:24px;height:24px}
+.sd-menu-icon:active,.sd-menu-icon.is-pressed{--f:url(frames/icon_round_pressed_2x.png);transform:translateY(1px)}
+.sd-menu-icon:focus-visible,.sd-menu-icon.is-highlighted{--f:url(frames/icon_round_highlighted_2x.png);color:#fff0c4}
+.sd-menu-icon:disabled,.sd-menu-icon.is-disabled{--f:url(frames/icon_round_disabled_2x.png);color:#5d5546;cursor:not-allowed}
+.sd-menu-icons{display:flex;justify-content:center;gap:18px}
+/* logo: three stacked layers; glow-in within 1.2s */
+.sd-logo{position:relative;width:min(300px,80vw);aspect-ratio:2/1;margin:0 auto}
+.sd-logo>img{position:absolute;inset:0;width:100%;height:100%}
+.sd-logo .lg-glow{opacity:0;animation:sdNeonOn 1.2s .15s steps(1,end) forwards,sdNeonHum 7s 1.6s infinite}
+.sd-logo .lg-tubes{opacity:.25;animation:sdTubeOn 1.2s .15s steps(1,end) forwards}
+.sd-logo .lg-plate{opacity:0;transform:translateY(8px) scale(1.06);animation:sdStamp .32s .85s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes sdNeonOn{0%{opacity:0}12%{opacity:.8}16%{opacity:0}30%{opacity:.9}34%{opacity:.2}46%,100%{opacity:1}}
+@keyframes sdTubeOn{0%{opacity:.25}12%{opacity:1}16%{opacity:.3}30%{opacity:1}34%{opacity:.4}46%,100%{opacity:1}}
+@keyframes sdNeonHum{0%,91%,100%{opacity:1}92%{opacity:.55}93%{opacity:1}95%{opacity:.7}96%{opacity:1}}
+@keyframes sdStamp{to{opacity:1;transform:none}}
+.sd-menu-in{opacity:0;transform:translateY(14px);animation:sdIn .35s cubic-bezier(.2,.9,.3,1) forwards;animation-delay:calc(.7s + var(--i,0) * .12s)}
+@keyframes sdIn{to{opacity:1;transform:none}}
+/* backdrop stack (backdrop/backdrop.json) */
+.sd-menu-bg{position:absolute;inset:0;overflow:hidden;background:#07080a}
+.sd-menu-bg>.l{position:absolute;inset:0;background-repeat:no-repeat;background-position:50% 100%;background-size:cover;will-change:transform}
+.sd-menu-bg .plate{background-image:url(backdrop/bg_plate_1_5x.webp);animation:sdKen 20s ease-in-out infinite alternate}
+/* real layers (V3 raws): add .layered to .sd-menu-bg; order sky < mid < fogfar < neon < siren < rainfar < near < smoke < rainnear < vig.
+   Parallax: set --px/--py (-1..1, pointer or tilt) on .sd-menu-bg; each layer moves depth x 45px. */
+.sd-menu-bg.layered .plate{display:none}
+.sd-menu-bg .sky,.sd-menu-bg .mid,.sd-menu-bg .near{inset:-24px;transform:translate(calc(var(--px,0) * var(--d) * 45px),calc(var(--py,0) * var(--d) * 20px));transition:transform .4s ease-out}
+.sd-menu-bg .sky{--d:.1;background-image:url(backdrop/bg_sky_2x.webp)}
+.sd-menu-bg .mid{--d:.3;background-image:url(backdrop/bg_mid_2x.webp)}
+.sd-menu-bg .near{--d:.75;background-image:url(backdrop/bg_near_2x.webp);inset:-24px -24px 0 -24px}
+.sd-menu-bg.layered .fogfar{opacity:.5}
+.sd-menu-bg.layered .neon{filter:opacity(.45)}
+.sd-menu-bg .fogfar{inset:0 auto 0 0;width:400%;background:url(backdrop/fx_fog_far_2x.png) 0 50%/50% 100% repeat-x;animation:sdDriftL 70s linear infinite;opacity:.8}
+.sd-menu-bg .neon{background-image:url(backdrop/fx_neon_2x.png);mix-blend-mode:screen;animation:sdFlicker 6s steps(1,end) infinite}
+.sd-menu-bg .siren{background-image:url(backdrop/fx_siren_2x.png);mix-blend-mode:screen;opacity:0;animation:sdSiren 9s ease-in-out 2s infinite}
+.sd-menu-bg .rainfar{inset:-100% 0 0 0;height:200%;background:url(backdrop/fx_rain_far_2x.png) 50% 0/100% auto repeat-y;animation:sdRain .9s linear infinite}
+.sd-menu-bg .rainnear{inset:-100% 0 0 0;height:200%;background:url(backdrop/fx_rain_near_2x.png) 50% 0/100% auto repeat-y;animation:sdRain .55s linear infinite}
+.sd-menu-bg .smoke{top:auto;height:46%;inset:auto auto 0 0;width:400%;background:url(backdrop/fx_smoke_near_2x.png) 0 100%/50% 100% repeat-x;animation:sdDriftR 45s linear infinite}
+.sd-menu-bg .vig{background-image:url(backdrop/fx_vignette_2x.png);background-size:100% 100%}
+@keyframes sdKen{from{transform:scale(1)}to{transform:scale(1.04)}}
+@keyframes sdDriftL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes sdDriftR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@keyframes sdRain{from{transform:translateY(0)}to{transform:translateY(50%)}}
+@keyframes sdFlicker{0%,100%{opacity:1}40%{opacity:.9}41%{opacity:.35}42%{opacity:1}70%{opacity:.75}71%{opacity:1}88%{opacity:.4}89%{opacity:1}}
+@keyframes sdSiren{0%{opacity:0;transform:translateX(-60%)}15%{opacity:1}30%{opacity:0;transform:translateX(60%)}100%{opacity:0;transform:translateX(60%)}}
+@media (prefers-reduced-motion:reduce){
+  .sd-menu-bg .l,.sd-logo>img,.sd-menu-in{animation:none!important;opacity:1;transform:none}
+  .sd-menu-bg .siren,.sd-menu-bg .rainnear,.sd-menu-bg .smoke{display:none}
+}

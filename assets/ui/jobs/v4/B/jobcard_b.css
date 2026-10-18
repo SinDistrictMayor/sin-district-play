@@ -1,0 +1,22 @@
+/* ui/jobs/v4/B quick-job card skin (src/build_jobcard_v4.py). No edge stripe, no glass, no pills. */
+/* Scope: add class jc-b to <nav id="whatnow"> and load this file after css/v3.css. Markup unchanged (sandbox.js drawStrip()).
+   Icons: point SD_ART_INDEX.jobs[k] at ui/jobs/v4/B/icons/<k> (same keys as ui/jobs). Category ink comes from the existing --acc. */
+#whatnow.jc-b .wn{background:none;border:0;border-radius:0;box-shadow:none;isolation:isolate;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
+#whatnow.jc-b .wn::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-style:solid;border-width:14px 16px 14px 16px;border-image:url(card_3x.png) 42 48 42 48 fill / 14px 16px 14px 16px stretch;transform:rotate(-.5deg)}
+#whatnow.jc-b .wn::after{content:"";position:absolute;pointer-events:none;background:url(decor_3x.png) 0 0/100% 100% no-repeat;left:-12px;top:-3px;width:48px;height:16px;transform:rotate(-32deg)}
+#whatnow.jc-b .wni{background:none;box-shadow:none;position:relative;overflow:visible}
+#whatnow.jc-b .wni.has-cast .wncast{background:#1b1e23;border-radius:0;width:33px;height:30px;margin:6.5px 7.5px 11.5px;transform:rotate(3deg)}
+#whatnow.jc-b .wni.has-cast::after{content:"";position:absolute;inset:0;background:url(holder_3x.png) 0 0/100% 100% no-repeat;pointer-events:none}
+#whatnow.jc-b .wnpay{position:relative;isolation:isolate;padding:5px 9px;--ink:color-mix(in srgb,var(--acc,#3fbf6a) 60%,#1a1c20);color:var(--ink);font-weight:900;padding:4px 9px}
+#whatnow.jc-b .wnh{background:none;padding:0;border-radius:0;gap:4px;color:#4a4d52}
+#whatnow.jc-b .wnh svg{display:none}
+#whatnow.jc-b .wnh::before{content:"";width:14px;height:16px;flex:none;background:#4a4d52;-webkit-mask:url(timer_3x.png) 0 0/100% 100%;mask:url(timer_3x.png) 0 0/100% 100%}
+#whatnow.jc-b .wnx{font-size:0;color:transparent;padding:0;justify-content:center;align-items:center}
+#whatnow.jc-b .wnx::before{content:"";width:22px;height:22px;background:url(dismiss_3x.png) 0 0/100% 100% no-repeat}
+#whatnow.jc-b .wndots{align-items:center;height:11px}
+#whatnow.jc-b .wndots i{width:8px;height:8px;border-radius:0;background:url(dot_off_3x.png) 0 0/100% 100% no-repeat}
+#whatnow.jc-b .wndots i.on{width:11px;height:11px;background-image:url(dot_on_3x.png)}
+#whatnow.jc-b .wnmore{border-radius:0;box-shadow:none;background:url(more_3x.png) 0 0/100% 100% no-repeat;min-width:32px;height:22px;line-height:22px;padding:0 4px 0 9px;color:#3a2e0e;font-weight:900;transform:rotate(4deg)}
+#whatnow.jc-b .wnpay::before{content:"";position:absolute;inset:-3px -6px;z-index:-1;background:var(--ink);-webkit-mask:url(pay_3x.png) 0 0/100% 100%;mask:url(pay_3x.png) 0 0/100% 100%}
+#whatnow.jc-b .wnt b{color:#22252b}#whatnow.jc-b .wnt small{color:#5e6268}
+#whatnow.jc-b .wnpay.heat{--ink:#b0282f}#whatnow.jc-b .wnpay.rep{--ink:#8a6414}

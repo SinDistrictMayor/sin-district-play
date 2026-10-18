@@ -26,3 +26,18 @@
 .s1-wn-in{animation:s1-wn-in .4s cubic-bezier(.2,1.2,.4,1) both;animation-delay:calc(var(--i, 0) * 70ms)}
 @keyframes s1-wn-in{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.s1-flash{animation-duration:.01s;opacity:0}.s1-flash-portrait,.s1-fan-in,.s1-photo-drop,.s1-stamp,.s1-stamp-drop,.s1-shake,.s1-wn-in{animation:none}.s1-card{transition:none}}
+/* V3 3b booking polish (additive; src/build_v3p3b.py). Screen A stack: mugshot_wall > height_chart (+labels) > .s1-wall-light > .s1-wall-shadow > hero cut-out > placard > flash */
+.s1-wall-light,.s1-wall-shadow{position:absolute;inset:0;pointer-events:none;background:url(wall_light_2x.png) 50% 50%/cover no-repeat}
+.s1-wall-shadow{background-image:url(wall_shadow_2x.png)}
+.s1-cut-shadow{filter:drop-shadow(15px 9px 14px rgba(0,0,0,.45))} /* per-hero alternative to .s1-wall-shadow on capable devices */
+.s1-letters{color:#f2f2ee;text-transform:uppercase;letter-spacing:.08em;text-shadow:0 1px 0 rgba(0,0,0,.9),0 -.5px 0 rgba(255,255,255,.35)} /* white plastic letter-board letters seated in the grooves */
+.s1-flash-sweep{animation:s1-flash-sweep .42s ease-out both}
+@keyframes s1-flash-sweep{0%{opacity:0;transform:translateX(-6%)}10%{opacity:1}100%{opacity:0;transform:translateX(0)}} /* optional: flash_burst slides with the swipe direction (add .rtl to mirror) */
+.s1-flash-sweep.rtl{animation-name:s1-flash-sweep-r}
+@keyframes s1-flash-sweep-r{0%{opacity:0;transform:translateX(6%)}10%{opacity:1}100%{opacity:0;transform:translateX(0)}}
+.s1-btn-back,.s1-btn-confirm{border-style:solid;border-width:18px 18px 22px 26px;border-image:url(buttons/btn_back_normal_2x.png) 36 36 44 52 fill / 18px 18px 22px 26px;background:none;color:#dfe6ee}
+.s1-btn-confirm{border-width:18px 18px 22px 18px;border-image:url(buttons/btn_confirm_normal_2x.png) 36 36 44 36 fill / 18px;color:#e8e2d2}
+.s1-btn-back:active{border-image-source:url(buttons/btn_back_pressed_2x.png)}.s1-btn-confirm:active{border-image-source:url(buttons/btn_confirm_pressed_2x.png)}
+.s1-btn-dice{width:68px;height:72px;background:url(buttons/btn_dice_normal_2x.png) 0 0/68px 72px no-repeat;border:0}.s1-btn-dice:active{background-image:url(buttons/btn_dice_pressed_2x.png)}
+@media (prefers-reduced-motion:reduce){.s1-flash-sweep{animation:none;opacity:0}}
+/* /V3 3b */

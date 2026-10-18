@@ -1,0 +1,23 @@
+/* ui/jobs/v4/C quick-job card skin (src/build_jobcard_v4.py). No edge stripe, no glass, no pills. */
+/* Scope: add class jc-c to <nav id="whatnow"> and load this file after css/v3.css. Markup unchanged (sandbox.js drawStrip()).
+   Icons: point SD_ART_INDEX.jobs[k] at ui/jobs/v4/C/icons/<k> (same keys as ui/jobs). Category ink comes from the existing --acc. */
+#whatnow.jc-c .wn{background:none;border:0;border-radius:0;box-shadow:none;isolation:isolate;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
+#whatnow.jc-c .wn::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-style:solid;border-width:14px 18px 14px 18px;border-image:url(card_3x.png) 42 54 42 54 fill / 14px 18px 14px 18px stretch}
+#whatnow.jc-c .wn::after{content:"";position:absolute;pointer-events:none;background:url(decor_3x.png) 0 0/100% 100% no-repeat;left:-4px;top:-5px;width:20px;height:16px}
+#whatnow.jc-c .wni{background:none;box-shadow:none;position:relative;overflow:visible}
+#whatnow.jc-c .wni.has-cast .wncast{background:#1b1e23;border-radius:0;width:38px;height:38px;margin:5px;filter:grayscale(.2)}
+#whatnow.jc-c .wni.has-cast::after{content:"";position:absolute;inset:0;background:url(holder_3x.png) 0 0/100% 100% no-repeat;pointer-events:none}
+#whatnow.jc-c .wnpay{position:relative;isolation:isolate;padding:5px 9px;color:#1b1e22;font:900 16px/1 "Arial Narrow","Roboto Condensed",system-ui,sans-serif;text-shadow:0 1px 0 rgba(255,255,255,.55);border-style:solid;border-width:6px 9px;padding:0 1px;border-image:url(pay_3x.png) 24 36 fill / 6px 9px stretch}
+#whatnow.jc-c .wnh{background:none;padding:0;border-radius:0;gap:4px;color:#aab2bd;font:700 12px/1 "Arial Narrow","Roboto Condensed",system-ui,sans-serif}
+#whatnow.jc-c .wnh svg{display:none}
+#whatnow.jc-c .wnh::before{content:"";width:16px;height:16px;flex:none;background:url(timer_3x.png) 0 0/100% 100% no-repeat}
+#whatnow.jc-c .wnx{font-size:0;color:transparent;padding:0;justify-content:center;align-items:center}
+#whatnow.jc-c .wnx::before{content:"";width:20px;height:20px;background:url(dismiss_3x.png) 0 0/100% 100% no-repeat}
+#whatnow.jc-c .wndots{align-items:center;height:11px}
+#whatnow.jc-c .wndots i{width:8px;height:8px;border-radius:0;background:url(dot_off_3x.png) 0 0/100% 100% no-repeat}
+#whatnow.jc-c .wndots i.on{width:11px;height:11px;background-image:url(dot_on_3x.png)}
+#whatnow.jc-c .wnmore{border-radius:0;box-shadow:none;background:url(more_3x.png) 0 0/100% 100% no-repeat;min-width:32px;height:20px;line-height:20px;padding:0 4px 0 9px;color:#dfe6ee;font:800 12px/20px "Arial Narrow","Roboto Condensed",system-ui,sans-serif}
+#whatnow.jc-c .wnt b{color:#e8ecef;font-family:"Arial Narrow","Roboto Condensed",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.03em}
+#whatnow.jc-c .wnt small{color:#9aa3ad;text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+#whatnow.jc-c .wni.has-job .wnjob{filter:none}
+#whatnow.jc-c .wnpay.heat{color:#7a1c1f}#whatnow.jc-c .wnpay.rep{color:#5a4317}

@@ -1,0 +1,109 @@
+/* V3 #1 main menu (title.js menu()). Motion = transform/opacity only; html.rm and prefers-reduced-motion stop every loop. */
+.titlescr .tpar{position:absolute;inset:-4%;animation:tpar 26s ease-in-out infinite alternate;will-change:transform}
+.titlescr .tpar .tbg{inset:0}
+@keyframes tpar{from{transform:translate3d(-1.5%,0,0) scale(1.04)}to{transform:translate3d(1.5%,-1%,0) scale(1.08)}}
+.titlescr.insetup .tpar{animation:none}
+.tfx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.titlescr.insetup .tfx{display:none}
+.tfx i{position:absolute;display:block}
+.tfx .train{inset:-100% 0 0 0;height:200%;opacity:.22;background:repeating-linear-gradient(102deg,transparent 0 9px,rgba(190,210,235,.55) 9px 10px,transparent 10px 23px),repeating-linear-gradient(98deg,transparent 0 17px,rgba(190,210,235,.35) 17px 18px,transparent 18px 41px);animation:train .9s linear infinite}
+.tfx .train.b{opacity:.12;animation-duration:1.4s;background-size:140% 100%}
+@keyframes train{from{transform:translate3d(0,0,0)}to{transform:translate3d(-4%,50%,0)}}
+.tfx .tsmoke{left:-30%;bottom:-8%;width:160%;height:45%;background:radial-gradient(ellipse at 30% 60%,rgba(120,120,135,.30),transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(90,90,105,.25),transparent 55%);animation:tsmoke 18s ease-in-out infinite alternate;opacity:.8}
+.tfx .tsmoke.b{bottom:20%;height:35%;opacity:.45;animation-duration:27s;animation-direction:alternate-reverse}
+@keyframes tsmoke{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(8%,-3%,0)}}
+.tfx .tneon{left:8%;top:30%;width:84%;height:30%;background:radial-gradient(ellipse at 50% 50%,rgba(255,40,70,.42),transparent 65%);mix-blend-mode:screen;animation:tneon 5.5s steps(1,end) infinite}
+@keyframes tneon{0%{opacity:.9}6%{opacity:.35}8%{opacity:.95}40%{opacity:.85}41%{opacity:.2}43%{opacity:.9}78%{opacity:1}79%{opacity:.4}80%{opacity:.95}100%{opacity:.9}}
+.tfx .tsiren{top:0;bottom:0;left:-60%;width:60%;background:linear-gradient(90deg,transparent,rgba(255,40,50,.22) 30%,rgba(60,110,255,.22) 70%,transparent);mix-blend-mode:screen;opacity:0;animation:tsiren 9s ease-in-out 2s infinite}
+@keyframes tsiren{0%{transform:translate3d(0,0,0);opacity:0}5%{opacity:1}30%{transform:translate3d(270%,0,0);opacity:1}34%,100%{transform:translate3d(270%,0,0);opacity:0}}
+html.rm .tpar,html.rm .tfx i{animation:none}html.rm .tfx .tsiren{opacity:0}
+@media (prefers-reduced-motion:reduce){.tpar,.tfx i{animation:none!important}.tfx .tsiren{opacity:0}}
+
+/* layout: everything fits at 360x640 without scrolling */
+.tbox.tmain{height:100%;max-height:none;overflow:hidden;justify-content:flex-end;gap:12px;padding:calc(16px + env(safe-area-inset-top)) 18px calc(14px + env(safe-area-inset-bottom))}
+.tbox.tmain .tlogowrap{margin:auto 0;text-align:center}
+.tbox.tmain .tlogo{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0;letter-spacing:0;text-shadow:none}
+.tlogo .tl1,.tlogo .tl2{display:block;font-weight:900;line-height:.9;color:#ffe9ea;text-transform:uppercase;
+  text-shadow:0 0 2px #fff,0 0 8px #ff2d4a,0 0 22px #ff1a3c,0 0 44px rgba(255,26,60,.65),0 3px 0 #5a0710}
+.tlogo .tl1{font-size:min(30vw,128px);letter-spacing:.12em;margin-right:-.12em}
+.tlogo .tl2{font-size:min(10.5vw,44px);letter-spacing:.32em;margin-right:-.32em;color:#f3d9a4;text-shadow:0 0 6px rgba(246,198,107,.8),0 0 18px rgba(232,163,61,.5),0 2px 0 #3a2508;
+  border-top:2px solid rgba(246,198,107,.75);border-bottom:2px solid rgba(246,198,107,.75);padding:4px 0 3px}
+.tbox.tmain .ttag{margin:8px 0 0;font-size:14px;color:#d9d2c7;letter-spacing:.04em;text-shadow:0 1px 3px #000}
+/* entrance (<= 1.5 s total) */
+.tbox.tmain .tl1{animation:tglow .9s ease-out both}
+.tbox.tmain .tl2{animation:tin .5s ease-out .35s both}
+.tbox.tmain .ttag{animation:tin .5s ease-out .5s both}
+.tbox.tmain .tsave{animation:tdrop .55s cubic-bezier(.2,1.3,.4,1) .6s both}
+.tbox.tmain .tmenu>*{animation:tin .45s ease-out both}
+.tbox.tmain .tmenu>:nth-child(1){animation-delay:.75s}.tbox.tmain .tmenu>:nth-child(2){animation-delay:.85s}.tbox.tmain .tmenu>:nth-child(3){animation-delay:.95s}
+.tbox.tmain .tver{animation:tin .4s ease-out 1.05s both}
+@keyframes tglow{0%{opacity:0;transform:scale(1.08)}20%{opacity:.8}26%{opacity:.15}34%{opacity:.9}42%{opacity:.3}60%,100%{opacity:1;transform:scale(1)}}
+@keyframes tin{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
+@keyframes tdrop{from{opacity:0;transform:translate3d(0,-26px,0) rotate(-6deg)}to{opacity:1;transform:rotate(-1.5deg)}}
+html.rm .tbox.tmain *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.tbox.tmain *{animation:none!important}}
+
+/* rap-sheet save card */
+.tsave{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:center;padding:10px 12px;border-radius:6px;transform:rotate(-1.5deg);
+  background:linear-gradient(180deg,#efe6d2,#e2d6bc);color:#1d1a16;box-shadow:0 8px 22px rgba(0,0,0,.55),inset 0 0 0 1px rgba(60,40,10,.25);font-family:"Courier New",ui-monospace,monospace}
+.tsave .tsph{width:64px;height:76px;border-radius:3px;overflow:hidden;background:#2a2622;box-shadow:inset 0 0 0 2px #1d1a16}
+.tsave .tsph img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;display:block}
+.tsave .tsinfo{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tsave .tsname{font:800 16px/1.15 Inter,system-ui,sans-serif;color:#141210;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.tsave .tsrow{display:flex;gap:8px;font-size:13px;line-height:1.25}.tsave .tsrow i{font-style:normal;width:44px;color:#5c5242;text-transform:uppercase;font-size:11px;letter-spacing:.08em;padding-top:1px}
+.tsave .tsrow b{font-weight:800}.tsave .tsrow.owe b{color:#a3141c}
+.tsave .tsstamp{position:absolute;right:10px;bottom:10px;transform:rotate(-8deg);padding:2px 8px;border:2px solid #b0161f;border-radius:4px;color:#b0161f;font:900 12px/1.2 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+
+/* buttons: primary = brass evidence tag with a red stamp strip and a punched hole */
+.tbox.tmain .tmenu{display:flex;flex-direction:column;gap:10px}
+.tbox.tmain .tmenu .btn{width:100%;min-height:52px}
+.tmenu .sd-btn.tagbtn{position:relative;min-height:64px!important;font-size:19px;letter-spacing:.14em;padding-left:56px;border-radius:8px 14px 14px 8px;
+  --bg:linear-gradient(180deg,#f3c46a,#c88a2a 55%,#a86d1c);--bd:#6b4310;box-shadow:0 6px 0 #5a3a0e,0 12px 26px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.45)}
+.tmenu .sd-btn.tagbtn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:38px;border-radius:8px 0 0 8px;background:linear-gradient(180deg,#c3202b,#8c111a);box-shadow:inset -2px 0 0 rgba(0,0,0,.25)}
+.tmenu .sd-btn.tagbtn::after{content:"";position:absolute;left:12px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:#1a120a;box-shadow:inset 0 2px 2px rgba(0,0,0,.8),0 0 0 2px #e7c27a}
+.tmenu .sd-btn.tagbtn .vi{display:none}
+.tmenu .sd-btn.tagbtn:active{transform:translate3d(0,4px,0);box-shadow:0 2px 0 #5a3a0e,0 6px 14px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.3)}
+.tmenu .tsmall{display:flex;gap:10px;justify-content:center}
+.tmenu .tsmall .tib{width:auto;flex:0 1 150px;min-height:44px;gap:8px;flex-direction:row;padding:0 14px}
+.tmenu .tsmall .tib .vi svg{width:18px;height:18px}
+.tbox.tmain .tver{text-align:center;color:#8d8a84;font-size:11px;margin:0}
+@media (max-height:660px){.tbox.tmain{gap:9px}.tlogo .tl1{font-size:min(26vw,104px)}.tsave .tsph{height:64px}.tsave{padding:8px 12px}.tmenu .sd-btn.tagbtn{min-height:58px!important}.tbox.tmain .tmenu .btn{min-height:48px}}
+@media (orientation:landscape) and (max-height:500px){.tbox.tmain{max-width:720px;display:grid;grid-template-columns:1fr 1fr;align-content:center;justify-content:normal;gap:10px 18px}
+  .tbox.tmain .tlogowrap{grid-row:1/3;margin:0}.tlogo .tl1{font-size:min(16vh,90px)}.tbox.tmain .tver{grid-column:1/-1}}
+
+/* ---- V3 #1 on the Artist's skin (assets/ui/menu/menu.css): layered backdrop replaces the CSS-only fallback above ---- */
+.titlescr.v3menu .tpar,.titlescr.v3menu .tfx,.titlescr.v3menu .splash{display:none}
+.titlescr.v3menu .sd-menu-bg{z-index:0}
+.titlescr.v3menu .tshade{background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,0) 30%,rgba(0,0,0,.55) 78%,rgba(0,0,0,.8))}
+.titlescr.v3menu .tbox{position:relative;z-index:2}
+.tlogo.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0;padding:0}
+.tbox.tmain .sd-logo{width:min(300px,78vw)}
+.tbox.tmain .tmenu.sd-menu{gap:20px;align-items:center;width:100%}
+.tbox.tmain .tmenu.sd-menu>.sd-menu-icons{animation:none}
+.tbox.tmain .tmenu.sd-menu>.sd-menu-tag{animation:sdIn .35s cubic-bezier(.2,.9,.3,1) forwards;animation-delay:calc(.7s + var(--i,0) * .12s)}
+.tbox.tmain .tmenu.sd-menu .sd-menu-tag{display:flex;width:calc(100% - 20px);max-width:300px;min-height:60px;margin:0 auto;padding:0 18px 0 54px;border-radius:0;text-align:center;justify-content:center;align-items:center;flex-direction:row;background:none}
+.tbox.tmain .tmenu.sd-menu .sd-menu-tag.sd-menu-sm{min-height:52px;max-width:240px}
+.tbox.tmain .tmenu.sd-menu .sd-menu-tag.is-disabled{opacity:1;border-style:solid}
+.tbox.tmain .tmenu.sd-menu .sd-menu-icons{display:flex;justify-content:center;gap:34px;margin:4px 0 18px;width:auto}
+.tbox.tmain .tmenu.sd-menu .sd-menu-icon{width:52px;height:52px;min-height:52px;padding:0;border:0;border-radius:50%;background:none;display:inline-flex;align-items:center;justify-content:center;flex-direction:row}
+.sd-menu-icon .cap{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:9px;font:700 11px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f6d48a;white-space:nowrap;text-shadow:0 1px 2px #000;pointer-events:none}
+html.rm .sd-menu-bg .l,html.rm .sd-logo>img,html.rm .sd-menu-in{animation:none!important;opacity:1;transform:none}
+html.rm .sd-menu-bg .siren,html.rm .sd-menu-bg .rainnear,html.rm .sd-menu-bg .smoke{display:none}
+@media (max-height:660px){.tbox.tmain .sd-logo{width:min(240px,64vw)}.tbox.tmain .tmenu.sd-menu{gap:16px}}
+
+/* QA V3 M2: every entrance settles by ~1.1s; M3: the disabled tag still answers a press (it shows a toast) */
+.tbox.tmain .sd-logo .lg-glow{animation:sdNeonOn .8s .05s steps(1,end) forwards,sdNeonHum 7s 1.2s infinite}
+.tbox.tmain .sd-logo .lg-tubes{animation:sdTubeOn .8s .05s steps(1,end) forwards}
+.tbox.tmain .sd-logo .lg-plate{animation:sdStamp .28s .55s cubic-bezier(.2,1.6,.4,1) forwards}
+.tbox.tmain .tmenu.sd-menu>.sd-menu-tag,.tbox.tmain .sd-menu-icons .sd-menu-in{animation:sdIn .3s cubic-bezier(.2,.9,.3,1) forwards;animation-delay:calc(.45s + var(--i,0) * .08s)}
+.tbox.tmain .tver{animation-delay:.6s!important;animation-duration:.35s!important}
+.tbox.tmain .tmenu.sd-menu .sd-menu-tag.is-disabled:active{transform:translateY(2px);filter:brightness(.92)}
+@property --px{syntax:"<number>";inherits:true;initial-value:0}
+@property --py{syntax:"<number>";inherits:true;initial-value:0}
+.titlescr.v3menu .sd-menu-bg:not(.ptr){animation:sdIdle 18s ease-in-out 1.6s infinite alternate}
+@keyframes sdIdle{0%{--px:0;--py:0}50%{--px:.6;--py:-.3}100%{--px:-.6;--py:.4}}
+html.rm .titlescr.v3menu .sd-menu-bg{animation:none}
+@media (prefers-reduced-motion:reduce){.titlescr.v3menu .sd-menu-bg{animation:none}}
+.tbox.tmain .tmenu.sd-menu>.sd-menu-tag:active,.tbox.tmain .tmenu.sd-menu>.sd-menu-tag.is-pressed{animation:none;opacity:1;transform:translateY(2px)}
+.tbox.tmain .tmenu.sd-menu>.sd-menu-tag.is-disabled:active{filter:brightness(.8)}
+.titlescr.v3menu .sd-menu-bg:not(.ptr) .l{transition:none}

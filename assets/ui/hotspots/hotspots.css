@@ -1,0 +1,14 @@
+/* Sin District - V3 #8 Case-the-scene hotspots (ui/hotspots/hotspots.css). transform/opacity only; honours prefers-reduced-motion.
+   <button class="hs" style="--x:.38;--y:.52"><svg class="hs-ico"><use href="assets/ui/hotspots/sprite.svg#hs-door"/></svg>
+     <span class="hs-stat"><svg><use href="assets/ui/hotspots/sprite.svg#hs-stat_risk"/></svg><b>2</b></span></button>
+   Place inside a position:relative box that has the casing plate's aspect (720x1280); --x/--y come from assets/casing/scenes.json. */
+.hs { position:absolute; left:calc(var(--x) * 100%); top:calc(var(--y) * 100%); width:56px; height:56px; margin:-28px 0 0 -28px; border:0; padding:0; background:url(svg/marker.svg) center/100% no-repeat; color:#f3e7cf; }
+.hs .hs-ico { position:absolute; inset:12px; width:32px; height:32px; }
+.hs::after { content:""; position:absolute; inset:-6px; border-radius:50%; border:2px solid #d9a441; opacity:0; animation:hs-pulse 2.4s ease-out infinite; pointer-events:none; }
+.hs.on { background-image:url(svg/marker_on.svg); color:#fff; transform:scale(1.12); }
+.hs.on::after { border-color:#ff2d2d; }
+.hs .hs-stat { position:absolute; left:50%; top:58px; transform:translateX(-50%); height:24px; padding:0 9px 0 6px; display:flex; gap:4px; align-items:center;
+  background:url(svg/stat_chip.svg) center/100% 100% no-repeat; font:700 13px/1 system-ui,sans-serif; white-space:nowrap; }
+.hs .hs-stat svg { width:16px; height:16px; }
+@keyframes hs-pulse { 0% { transform:scale(.8); opacity:.75 } 70% { transform:scale(1.35); opacity:0 } 100% { opacity:0 } }
+@media (prefers-reduced-motion: reduce) { .hs::after { animation:none; opacity:.35; transform:none } .hs.on { transform:none } }

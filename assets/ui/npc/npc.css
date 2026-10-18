@@ -1,0 +1,45 @@
+/* V3 #4 NPC presentation (ui/npc/npc.json). Load after ui/buttons/buttons.css. All text is live; lines are at most ~90 chars. */
+.sd-bark{position:fixed;bottom:calc(14vh + env(safe-area-inset-bottom));left:0;width:min(78vw,340px);height:min(56vh,420px);pointer-events:none;z-index:60;
+  animation:sdBarkIn .32s cubic-bezier(.2,.9,.25,1.1) both,sdBarkOut .28s ease-in 3.2s forwards}
+.sd-bark.right{left:auto;right:0}
+.sd-bark .plate{position:absolute;inset:auto auto 0 0;width:80%;height:100%;background:url(slash_amber_2x.png) 0 100%/100% 100% no-repeat}
+.sd-bark.c-red .plate{background-image:url(slash_red_2x.png)}.sd-bark.c-cyan .plate{background-image:url(slash_cyan_2x.png)}.sd-bark.c-brass .plate{background-image:url(slash_brass_2x.png)}
+.sd-bark.right .plate{left:auto;right:0;transform:scaleX(-1)}
+.sd-bark .who{position:absolute;bottom:0;left:-14%;height:96%;aspect-ratio:11/12;object-fit:contain;object-position:50% 100%;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.7)) contrast(1.04) saturate(.94)}
+.sd-bark.right .who{left:auto;right:-14%;transform:scaleX(-1)}            /* cut-outs face camera; mirror for right-edge entrances */
+.sd-bark .sd-bubble{position:absolute;left:44%;top:0;max-width:min(56vw,240px)}
+.sd-bark.right .sd-bubble{left:auto;right:48%}
+.sd-bark .sd-nameplate{position:absolute;left:8%;bottom:6%}
+.sd-bark.right .sd-nameplate{left:auto;right:8%}
+@keyframes sdBarkIn{from{transform:translateX(-105%)}}
+.sd-bark.right{animation-name:sdBarkInR,sdBarkOut}@keyframes sdBarkInR{from{transform:translateX(105%)}}
+@keyframes sdBarkOut{to{opacity:0;transform:translateY(12px)}}
+/* speech bubble: 9-slice body (slice 20) + tail element; variants light (default) / dark / threat */
+.sd-bubble{position:relative;display:inline-block;box-sizing:border-box;min-width:96px;padding:12px 16px 13px;
+  border:20px solid transparent;border-image:url(bubble_light_2x.png) 40 fill / 20px stretch;padding:0;
+  font:600 15px/1.28 Inter,"Noto Sans",sans-serif;color:#16181c;letter-spacing:.005em}
+.sd-bubble>span{display:block;margin:-8px -4px -7px}
+.sd-bubble::after{content:"";position:absolute;width:28px;height:22px;left:6px;bottom:-35px;background:url(tail_light_left_2x.png) 0 0/100% 100%}
+.sd-bubble.tail-right::after{left:auto;right:6px;background-image:url(tail_light_right_2x.png)}
+.sd-bubble.dark{border-image-source:url(bubble_dark_2x.png);color:#f2ede2}.sd-bubble.dark::after{background-image:url(tail_dark_left_2x.png)}.sd-bubble.dark.tail-right::after{background-image:url(tail_dark_right_2x.png)}
+.sd-bubble.threat{border-image-source:url(bubble_threat_2x.png)}.sd-bubble.threat::after{background-image:url(tail_threat_left_2x.png)}.sd-bubble.threat.tail-right::after{background-image:url(tail_threat_right_2x.png)}
+.sd-bubble.no-tail::after{display:none}
+/* nameplate: 9-slice (12 22 12 22), name once, optional role line */
+.sd-nameplate{display:inline-flex;flex-direction:column;justify-content:center;box-sizing:border-box;min-height:40px;padding:0 6px 4px;
+  border-style:solid;border-width:12px 22px;border-image:url(nameplate_steel_2x.png) 24 44 fill / 12px 22px stretch;
+  font:900 17px/1 "Barlow Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f2f2f2;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.sd-nameplate small{display:block;margin-top:2px;font:600 10px/1 Inter,sans-serif;letter-spacing:.06em;opacity:.8}
+.sd-nameplate>span{margin:-6px 0 -2px}
+.sd-nameplate.brass{border-image-source:url(nameplate_brass_2x.png);color:#1c140a;text-shadow:0 1px 0 rgba(255,240,200,.45)}
+.sd-nameplate.red{border-image-source:url(nameplate_red_2x.png);color:#fff4e6}
+/* bottom-third decision: big portrait, ONE line, max 2 choices */
+.sd-third{position:fixed;inset:auto 0 0 0;height:min(48vh,420px);z-index:70;background:url(third_scrim_2x.png) 0 100%/100% 100% no-repeat;animation:sdThirdIn .3s ease-out both}
+.sd-third .who{position:absolute;bottom:118px;left:-4%;height:min(40vh,330px);aspect-ratio:11/12;filter:drop-shadow(0 8px 18px rgba(0,0,0,.75))}
+.sd-third .panel{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));box-sizing:border-box;padding:4px 6px 6px;
+  border:18px solid transparent;border-image:url(third_panel_2x.png) 36 fill / 18px stretch}
+.sd-third .sd-nameplate{position:absolute;left:24px;top:-34px}
+.sd-third .line{margin:6px 0 12px;font:600 16px/1.3 Inter,sans-serif;color:#f2ede2}
+.sd-third .acts{display:flex;gap:10px}.sd-third .acts>*{flex:1}
+@keyframes sdThirdIn{from{transform:translateY(30%);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sd-bark,.sd-third{animation:none}.sd-bark{animation:sdBarkOut .2s linear 3.2s forwards}}

@@ -38,12 +38,6 @@ button:focus-visible,input:focus-visible,.pin:focus-visible .pinin,#map:focus-vi
 .glyph.big{width:64px;height:64px;stroke:#555}
 .pinlab{position:absolute;top:100%;left:50%;transform:translateX(calc(-50% + var(--lx,0px)));margin-top:6px;white-space:nowrap;font-size:12px;font-weight:700;background:rgba(0,0,0,.8);padding:2px 7px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s;color:#fff}
 #pins:not([data-zoom=far]) .pinlab:not(.nolab){opacity:1}
-/* far zoom: dots (route planning). The 48px button keeps the hit area. Shape differs by glow: red diamond, yellow ring, white dot */
-#pins[data-zoom=far] .pinin{transform:scale(.478);border-width:6px;background:var(--c)}
-#pins[data-zoom=far] .glyph{display:none}
-#pins[data-zoom=far] .pin.red .pinin{background:none;border:0;border-radius:0}
-#pins[data-zoom=far] .pin.red .pinin::before{content:"";position:absolute;inset:6px;background:var(--c);border-radius:6px;transform:rotate(45deg)}
-#pins[data-zoom=far] .pin.yellow .pinin{background:#0a0a0a}
 
 /* ---- HUD ---- */
 #hud{background:var(--panel);border-top:1px solid #333;padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}

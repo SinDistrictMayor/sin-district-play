@@ -28,3 +28,48 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .sd-art:active{transform:scale(.98)}.sd-map:active{filter:brightness(1.12)}
 .sd-art.dis,.sd-art[aria-disabled=true]{cursor:not-allowed}
 @media (prefers-reduced-motion:reduce){.sd-art:active{transform:none}}
+/* component shapes on the kit skin */
+.sd-btn.btn{flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 16px;width:100%;text-align:center}
+.sd-btn.btn .brow{display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%;min-width:0}
+.sd-btn.btn .bt{font:inherit;letter-spacing:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sd-btn.btn .vi svg,.sd-btn.btn .vi.big svg{width:20px;height:20px}
+.sd-btn.abtn{flex-direction:column;align-items:stretch;justify-content:center;gap:2px;padding:6px 12px;width:100%;text-transform:none;letter-spacing:0;font-size:14px;text-align:left}
+.sd-btn.abtn small{text-align:left}
+.sd-btn.rb{flex-direction:column;gap:2px;padding:4px 2px;min-height:56px;font-size:11px;letter-spacing:.03em;min-width:44px}
+.sd-btn.rb svg{width:20px;height:20px}
+.sd-btn-icon.zbtn,.sd-btn-icon.x,.sd-btn-icon.nav,.sd-btn-icon.ibtn,.sd-btn-icon.mugnav,.sd-btn-icon.lgt{width:44px;min-width:44px;height:44px;min-height:44px;border-radius:12px;font-size:22px}
+.sd-btn-icon.wnx{width:44px;min-width:44px;height:44px;min-height:44px;border-radius:50%;--bg:transparent;--sh:none;--bd:transparent;box-shadow:none;color:#aab0ba}
+.sd-btn-icon.ibtn.big{width:auto;min-width:44px;padding:0 8px}
+.sd-btn-sm{text-transform:none;letter-spacing:.01em}
+.sd-choice.tile,.sd-choice.ptile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 6px;text-align:center;min-height:92px}
+.sd-choice.tile::before,.sd-choice.ptile::before{display:none}
+.sd-choice.k-tile,.sd-choice.rad{display:grid;grid-template-columns:32px minmax(0,1fr);min-height:48px;padding:6px 8px;column-gap:8px}
+.sd-choice.dchoice{display:flex;flex-direction:column;align-items:stretch;min-height:72px;padding:10px 12px}
+.sd-tab{text-transform:none;letter-spacing:.02em;font-size:14px;min-height:44px}
+.sd-tabbar{gap:0;border-bottom:1px solid #24282e}
+.sd-btn.btn{padding:6px 12px;letter-spacing:.03em}
+.sd-btn.moreb{min-height:44px}
+.sd-tab{white-space:nowrap;padding:0 10px}
+.sd-choice.dchoice .dl,.sd-choice.dchoice small{white-space:normal;overflow:visible;text-overflow:clip}
+/* V3 phone pass: two-up action buttons = title line + one chip line (% and hours; pay is in the label/aria) */
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow{flex-wrap:wrap;row-gap:4px;column-gap:4px}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .at{flex:1 1 60%;min-width:0;white-space:nowrap}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .pchip{font-size:11px;padding:1px 5px;min-height:0;flex:none}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .pchip.cash{display:none}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .vi{flex:none}
+.sd-btn.moreb{height:auto}
+.sfoot .sd-btn.btn{letter-spacing:.01em;padding:6px 8px}
+.sd-tab span{white-space:nowrap}
+.quick .sd-btn.btn{letter-spacing:0;text-transform:none;padding:6px 8px}
+.acts.has-ap .sd-btn.abtn:not(.approach){padding:5px 8px;gap:0}
+.acts.has-ap .sd-btn.abtn:not(.approach) .vi svg,.acts.has-ap .sd-btn.abtn:not(.approach) .vi.big svg{width:18px;height:18px}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .at{flex:1 1 calc(100% - 26px)}
+@media (max-height:700px){.acts.has-ap .sd-btn.abtn.approach small{display:none}.acts.has-ap .sd-btn.abtn.approach{min-height:46px;padding:4px 12px}}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .pchip{padding:1px 4px;gap:2px;letter-spacing:0}
+.acts.has-ap .sd-btn.abtn:not(.approach) .arow .pchip svg{width:12px;height:12px}
+.sfoot .sd-btn.btn .bt{letter-spacing:0;font-size:14px}
+.sd-btn.abtn.approach{min-height:46px!important}
+.quick .sd-btn.btn .bt{font-size:13px}.quick .sd-btn.btn .brow{gap:4px;flex-wrap:wrap}
+/* the old .btn / .btn.primary skins (style.css) must not beat the kit: kit background, ink and border on every kit button */
+.sd-btn.btn,.sd-btn.btn.primary,.sd-btn.btn.danger{background:url(../assets/ui/buttons/grain.png),var(--bg);background-size:128px 128px,100% 100%;color:var(--fg);border-color:var(--bd)}
+.sd-btn.btn.primary small{color:#3d2a0c}
