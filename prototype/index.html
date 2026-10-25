@@ -528,7 +528,6 @@ input[type=range]{accent-color:var(--cream)}
 .mini-stamp.TAKEN{color:#8a6a2a}.mini-stamp.REPELLED{color:#a3202a}.mini-stamp.RETREATED{color:#6a605a}
 .mini-stamp.HELD{color:#1d1212;background:var(--cream);border-color:#1d1212}
 .mini-stamp.LOST{color:var(--ash);border-style:dashed}
-body:has(#report.on) .toasts{bottom:auto;top:72px}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -725,7 +724,9 @@ const P=document.getElementById('phone');
 const vib=ms=>navigator.vibrate&&navigator.vibrate(ms);
 const sfx=id=>{}; // [HOOK] sound ids: tap buy hire coins send alert shot_hit shot_miss victory defeat pact_offer betrayal
 // ---------- toasts / modal ----------
-function toast(t,k='info'){const w=$('.toasts');const d=document.createElement('div');d.className='toast '+k;d.textContent=t;w.appendChild(d);while(w.children.length>2)w.firstChild.remove();setTimeout(()=>d.remove(),2500)}
+let toastQ=[];function toast(t,k='info'){if($('#report')&&$('#report').classList.contains('on')){toastQ.push([t,k]);return}showToast(t,k)}
+function flushToasts(){const q=toastQ;toastQ=[];q.forEach(([t,k],i)=>setTimeout(()=>toast(t,k),i*350))}
+function showToast(t,k='info'){const w=$('.toasts');const d=document.createElement('div');d.className='toast '+k;d.textContent=t;w.appendChild(d);while(w.children.length>2)w.firstChild.remove();setTimeout(()=>d.remove(),2500)}
 function res(r,okText){if(r&&r.ok===false){toast(r.why,'bad');vib(30);return false}if(okText)toast(okText,'good');vib(30);paintTop();return true}
 function modal(html){const m=$('#modal');m.innerHTML=`<div class="card">${html}</div>`;m.classList.add('on');m.onclick=e=>{if(e.target===m)closeModal()}}
 const closeModal=()=>$('#modal').classList.remove('on');
@@ -1008,7 +1009,7 @@ function go(h){location.hash='#'+h}
 function route(){const [r,arg]=(location.hash.slice(1)||'map').split('?')[0].split('/');$('#menu').classList.remove('on');closeModal();if($('#sheet').classList.contains('on'))closeSheet();
  const tab=TABS.includes(r)?r:null;
  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id==='screen-'+(tab||'map')));
- FULL.forEach(f=>$('#'+f).classList.toggle('on',f===r));
+ const wasRep=$('#report').classList.contains('on');FULL.forEach(f=>$('#'+f).classList.toggle('on',f===r));if(r==='report')$('.toasts').replaceChildren();if(wasRep&&r!=='report'&&toastQ.length)flushToasts();
  const full=FULL.includes(r);['#top','#dock','#objective'].forEach(q=>$(q).style.display=full?'none':'');
  $('#alertbar').style.display=full||!inbound()?'none':'';P.classList.toggle('alerting',!full&&!!inbound());$('#chips').style.display=full||tab!=='map'?'none':'';$('#objective').style.display=full||(tab!=='map')?'none':'';
  paintDock(tab||'map');
