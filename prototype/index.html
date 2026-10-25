@@ -691,6 +691,8 @@ input[type=range]{accent-color:var(--cream)}
 [class*="backdrop"],.chip{backdrop-filter:none!important}
 .cash.tick{animation:none}.sd-dial .val{animation:none;stroke-dashoffset:0}
 .pin{left:0!important;top:0!important;will-change:transform}.pin.edge{transform:none}.f-baked{pointer-events:none}
+.pin.quiet{opacity:.18;transform-origin:center}.pin.quiet span,.pin.quiet .pv{transform:scale(.55)}.pin.quiet .pg{display:none}
+.city-zoom .pin.quiet:not(.inrange){opacity:0;pointer-events:none;transition:opacity .2s}.pin.quiet{transition:opacity .2s}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -817,9 +819,9 @@ window.SDMap=function(el,o){let api0frame=()=>{};
   ['min','maj','mot'].forEach(k=>add(g,'path',{d:RD[k],class:'r-case r-'+k,'vector-effect':'non-scaling-stroke'}));
   // filler city (decorative, non-playable) — fake 2.5D: shadow, side face, roof
   // v5.6 perf: filler city + lit windows baked once into a single bitmap (was 3 full SVG copies + blur filter)
-  if(window.SD_FILL&&SD_FILL.length){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;SD_FILL.forEach(f=>f.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));
+  let bakedImg=null;const bake=()=>{if(!(window.SD_FILL&&SD_FILL.length))return;{let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;SD_FILL.forEach(f=>f.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));
     x0-=10;y0-=10;x1+=10;y1+=10;const W=x1-x0,H=y1-y0,K=Math.min(3,4096/Math.max(W,H)),cv=document.createElement('canvas');cv.width=Math.ceil(W*K);cv.height=Math.ceil(H*K);
-    const c=cv.getContext('2d'),day=document.body.classList.contains('day'),snow=!!document.querySelector('.map-snow');c.setTransform(K,0,0,K,-x0*K,-y0*K);
+    const c=cv.getContext('2d'),ph=document.getElementById('phone')||document.body,day=ph.classList.contains('day')||document.body.classList.contains('day'),snow=!!document.querySelector('.map-snow');c.setTransform(K,0,0,K,-x0*K,-y0*K);
     const poly=(f,dx,dy)=>{c.beginPath();f.forEach(([x,y],i)=>i?c.lineTo(x+dx,y+dy):c.moveTo(x+dx,y+dy));c.closePath()};
     c.fillStyle=day?'#141A2299':'#0000008c';SD_FILL.forEach(f=>{poly(f,6,9);c.fill()});
     c.fillStyle=day?'#2E3742':'#0F1216';SD_FILL.forEach(f=>{poly(f,2.5,4);c.fill()});
@@ -828,7 +830,9 @@ window.SDMap=function(el,o){let api0frame=()=>{};
       SD_FILL.forEach(f=>{const v=rnd();if(v>.42)return;let a=1e9,b=1e9,A=-1e9,B=-1e9;f.forEach(([x,y])=>{a=Math.min(a,x);b=Math.min(b,y);A=Math.max(A,x);B=Math.max(B,y)});
         const n=1+Math.floor(rnd()*3);for(let i=0;i<n;i++){const x=a+(A-a)*(.25+rnd()*.5),y=b+(B-b)*(.25+rnd()*.5),hot=rnd()<.35;
           if(hot){c.fillStyle='#F2B8602e';c.fillRect(x-2,y-2,6.6,6.6)}c.fillStyle=hot?'#F6C77A':'#B98E4E';c.fillRect(x,y,2.6,2.6)}})}
-    add(g,'image',{href:cv.toDataURL('image/png'),x:x0,y:y0,width:W,height:H,class:'f-baked',preserveAspectRatio:'none'})}
+    const href=cv.toDataURL('image/png');if(bakedImg){bakedImg.setAttribute('href',href);return}
+    bakedImg=add(g,'image',{href,x:x0,y:y0,width:W,height:H,class:'f-baked',preserveAspectRatio:'none'})}};
+  bake();
   const halo=add(g,'g',{class:'v5-halo'});
   const routes=add(g,'g',{});
   const blds={};
@@ -848,7 +852,7 @@ window.SDMap=function(el,o){let api0frame=()=>{};
   api0frame=()=>{if(el.id!=='map'||!o.center)return;const sx=shoreX(view.y);if(sx==null)return;view.s=Math.min(view.s,.3);const w=(el.clientWidth||390)/view.s,hx=o.center[0]+60;
     let x=sx-120+w/2;x=Math.max(x,hx-.32*w);if(x<view.x)view.x=x};
   api0frame();
-  const api={view,blds,routes,el,pins,halo};
+  const api={view,blds,routes,el,pins,halo,rebake:bake};
   api.toScreen=(x,y)=>[(x-view.x)*view.s+el.clientWidth/2,(y-view.y)*view.s+el.clientHeight/2];
   api.paint=()=>{
     D.buildings.forEach(b=>{const st=S.buildings[b.id],p=blds[b.id];
@@ -1004,13 +1008,48 @@ function drawFootholds(api,list){const L=api.routes.previousSibling;if(!L||!list
 /* perf: pan/zoom move the already-painted SVG + pin layer with a compositor transform; the real repaint
    (map.js paint: every building class + every pin's left/top) runs once, 140ms after the gesture settles.
    toScreen uses cached el size instead of clientWidth per pin (that forced a layout per pin). */
+const DECLUTTER_K=1.6,INRANGE_M=600;/* DECLUTTER_K is the designer's; INRANGE_M = reach from the selected owned lot (engine has no per-unit travel range yet) */
+function markRange(){if(!map)return;const o=sel!=null&&S.buildings[sel]&&S.buildings[sel].owner==='player'?B[sel].c:null;
+ map.pins.querySelectorAll('.pin.o-free:not(.quiet):not(.target):not(.incoming):not(.home)').forEach(e=>e.classList.add('quiet'));
+ map.pins.querySelectorAll('.pin.quiet').forEach(e=>{const x=+e.dataset.x,y=+e.dataset.y;e.classList.toggle('inrange',!!(o&&Math.hypot(x-o[0],y-o[1])<=INRANGE_M))})}
+let fillBox=null;
+/* worker bake: OffscreenCanvas in a worker keeps the 2682x4096 canvas allocation, draw and PNG encode off the main thread entirely. Same drawing as the kit. */
+let bakeW=null,bakeWsent=false;const BAKE_SRC=`let F=null;onmessage=async e=>{const d=e.data;if(d.F){F=d.F;return}const{x0,y0,x1,y1,day,snow,tok}=d,W=x1-x0,H=y1-y0,K=Math.min(3,4096/Math.max(W,H)),cv=new OffscreenCanvas(Math.ceil(W*K),Math.ceil(H*K)),c=cv.getContext('2d');c.setTransform(K,0,0,K,-x0*K,-y0*K);
+const poly=(f,dx,dy)=>{c.beginPath();f.forEach(([x,y],i)=>i?c.lineTo(x+dx,y+dy):c.moveTo(x+dx,y+dy));c.closePath()};
+c.fillStyle=day?'#141A2299':'#0000008c';F.forEach(f=>{poly(f,6,9);c.fill()});c.fillStyle=day?'#2E3742':'#0F1216';F.forEach(f=>{poly(f,2.5,4);c.fill()});
+c.fillStyle=snow?(day?'#C9D2DC':'#3A424C'):day?'#8794A3':'#1A1E24';c.strokeStyle=snow?(day?'#E6ECF2':'#6B7682'):day?'#A9B4C0':'#2C323A';c.lineWidth=.7;F.forEach(f=>{poly(f,0,0);c.fill();c.stroke()});
+if(!day){let r=1234567;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;F.forEach(f=>{const v=rnd();if(v>.42)return;let a=1e9,b=1e9,A=-1e9,B=-1e9;f.forEach(([x,y])=>{a=Math.min(a,x);b=Math.min(b,y);A=Math.max(A,x);B=Math.max(B,y)});
+const n=1+Math.floor(rnd()*3);for(let i=0;i<n;i++){const x=a+(A-a)*(.25+rnd()*.5),y=b+(B-b)*(.25+rnd()*.5),hot=rnd()<.35;if(hot){c.fillStyle='#F2B8602e';c.fillRect(x-2,y-2,6.6,6.6)}c.fillStyle=hot?'#F6C77A':'#B98E4E';c.fillRect(x,y,2.6,2.6)}})}
+postMessage({tok,blob:await cv.convertToBlob({type:'image/png'})})}`;
+function workerBake(m,img,tok){if(!bakeW){try{bakeW=new Worker(URL.createObjectURL(new Blob([BAKE_SRC],{type:'text/javascript'})))}catch(e){return false}}
+ const F=SD_FILL;if(!fillBox){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;F.forEach(f=>f.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));fillBox=[x0-10,y0-10,x1+10,y1+10]}
+ if(!bakeWsent){bakeW.postMessage({F});bakeWsent=true}const ph=document.getElementById('phone')||document.body,[x0,y0,x1,y1]=fillBox;
+ bakeW.onmessage=e=>{const {tok:t,blob}=e.data;if(t!==m._bakeTok||!img.isConnected)return;const u=URL.createObjectURL(blob),pi=new Image();pi.src=u;(pi.decode?pi.decode():Promise.resolve()).catch(()=>{}).then(()=>{if(t!==m._bakeTok)return;img.setAttribute('href',u);if(m._bakeUrl)URL.revokeObjectURL(m._bakeUrl);m._bakeUrl=u;m.onBaked&&m.onBaked()})};
+ bakeW.onerror=()=>{bakeW=null;sliceBake2(m,img,tok)};bakeW.postMessage({x0,y0,x1,y1,day:ph.classList.contains('day')||document.body.classList.contains('day'),snow:!!document.querySelector('.map-snow'),tok});return true}
+function sliceBake(m,img){const tok=m._bakeTok=(m._bakeTok||0)+1;if(typeof OffscreenCanvas!=='undefined'&&OffscreenCanvas.prototype.convertToBlob&&workerBake(m,img,tok))return;requestAnimationFrame(()=>{if(tok===m._bakeTok)sliceBake2(m,img,tok)})}
+function sliceBake2(m,img,tok){const F=SD_FILL;if(!fillBox){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;F.forEach(f=>f.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));fillBox=[x0-10,y0-10,x1+10,y1+10];requestAnimationFrame(()=>{if(tok===m._bakeTok)sliceBake2(m,img,tok)});return}
+ const [x0,y0,x1,y1]=fillBox;const W=x1-x0,H=y1-y0,K=Math.min(3,4096/Math.max(W,H)),cv=document.createElement('canvas');cv.width=Math.ceil(W*K);cv.height=Math.ceil(H*K);
+ const c=cv.getContext('2d'),ph=document.getElementById('phone')||document.body,day=ph.classList.contains('day')||document.body.classList.contains('day'),snow=!!document.querySelector('.map-snow');c.setTransform(K,0,0,K,-x0*K,-y0*K);
+ const poly=(f,dx,dy)=>{c.beginPath();f.forEach(([x,y],i)=>i?c.lineTo(x+dx,y+dy):c.moveTo(x+dx,y+dy));c.closePath()};
+ let r=1234567;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+ const passes=[[()=>{c.fillStyle=day?'#141A2299':'#0000008c'},f=>{poly(f,6,9);c.fill()}],[()=>{c.fillStyle=day?'#2E3742':'#0F1216'},f=>{poly(f,2.5,4);c.fill()}],
+  [()=>{c.fillStyle=snow?(day?'#C9D2DC':'#3A424C'):day?'#8794A3':'#1A1E24';c.strokeStyle=snow?(day?'#E6ECF2':'#6B7682'):day?'#A9B4C0':'#2C323A';c.lineWidth=.7},f=>{poly(f,0,0);c.fill();c.stroke()}]];
+ if(!day)passes.push([()=>{},f=>{const v=rnd();if(v>.42)return;let a=1e9,b=1e9,A=-1e9,B=-1e9;f.forEach(([x,y])=>{a=Math.min(a,x);b=Math.min(b,y);A=Math.max(A,x);B=Math.max(B,y)});
+  const n=1+Math.floor(rnd()*3);for(let i=0;i<n;i++){const x=a+(A-a)*(.25+rnd()*.5),y=b+(B-b)*(.25+rnd()*.5),hot=rnd()<.35;if(hot){c.fillStyle='#F2B8602e';c.fillRect(x-2,y-2,6.6,6.6)}c.fillStyle=hot?'#F6C77A':'#B98E4E';c.fillRect(x,y,2.6,2.6)}}]);
+ let p=0,i=0,warm=0;const step=()=>{if(!warm++){c.fillRect(x0,y0,0.001,0.001);requestAnimationFrame(step);return}if(tok!==m._bakeTok||!img.isConnected)return;const t0=performance.now();
+  while(p<passes.length&&performance.now()-t0<8){if(i===0)passes[p][0]();const e=Math.min(F.length,i+60);for(;i<e;i++)passes[p][1](F[i]);if(i>=F.length){p++;i=0;break}}
+  if(p<passes.length){requestAnimationFrame(step);return}
+  cv.toBlob(b=>{if(!b||tok!==m._bakeTok||!img.isConnected)return;const u=URL.createObjectURL(b),pi=new Image();pi.src=u;(pi.decode?pi.decode():Promise.resolve()).catch(()=>{}).then(()=>{if(tok!==m._bakeTok)return;img.setAttribute('href',u);if(m._bakeUrl)URL.revokeObjectURL(m._bakeUrl);m._bakeUrl=u;m.onBaked&&m.onBaked()})},'image/png')};
+ requestAnimationFrame(step)}
 function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,orig=m.paint,v=m.view;let W=el.clientWidth,H=el.clientHeight,M=0;
  /* edge margin: the SVG is drawn M px past every edge, so a drag shows real map (incl. the designer's baked filler image) instead of blank */
  const size=()=>{W=el.clientWidth;H=el.clientHeight;M=Math.round(Math.max(W,H)*.5);if(!svg)return;Object.assign(svg.style,{left:-M+'px',top:-M+'px',width:W+2*M+'px',height:H+2*M+'px',inset:'auto'});svg.setAttribute('viewBox',`${-M} ${-M} ${W+2*M} ${H+2*M}`)};size();
  const ro=new ResizeObserver(()=>{if(!svg.isConnected){ro.disconnect();return}size();commit()});ro.observe(el);
+ /* declutter (designer spec): .city-zoom on the pin layer while zoomed out past DECLUTTER_K x the opening zoom */
+ const S_DEF=v.s,cz=()=>pins.classList.toggle('city-zoom',v.s<DECLUTTER_K*S_DEF);m.declutter=cz;
  m.toScreen=(x,y)=>[(x-v.x)*v.s+W/2,(y-v.y)*v.s+H/2];
  let com=null,timer=0,gest=0;const L=[svg,pins].filter(Boolean);L.forEach(e=>e.style.willChange='transform');
- const commit=()=>{clearTimeout(timer);timer=0;L.forEach(e=>e.style.transform='');com={x:v.x,y:v.y,s:v.s};orig();m.onSettle&&m.onSettle()};
+ const commit=()=>{clearTimeout(timer);timer=0;L.forEach(e=>e.style.transform='');com={x:v.x,y:v.y,s:v.s};orig();cz();markRange();m.onSettle&&m.onSettle()};
  const settle=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return;gest=0;commit()},140)};
  el.addEventListener('pointerdown',()=>{gest=1},true);el.addEventListener('wheel',()=>{gest=1;settle()},{capture:true,passive:true});addEventListener('pointerup',()=>{if(gest&&svg.isConnected)settle()},true);
  m.paint=()=>{if(!com||!gest){commit();return}const k=v.s/com.s,tx=(com.x-v.x)*v.s,ty=(com.y-v.y)*v.s,tf=`translate3d(${tx}px,${ty}px,0) scale(${k})`;
@@ -1027,7 +1066,10 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  /* snow re-bake: the designer's map.js bakes filler roofs once at build. When snow flips (weather refreshes every 30 game-min),
     call their api.rebake() if they expose one, deferred until no drag/pinch is in progress. */
  let snowWas=P.classList.contains('map-snow'),rebakeQ=false;
- const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake==='function')m.rebake()};/* hook for the designer's map.js; a full temp SDMap rebuild costs ~850ms at 4x so it is not used */
+ const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake!=='function')return;
+  /* the kit's api.rebake() is one synchronous bake (~920ms long task at 4x CPU: ~400ms draw + ~400ms PNG encode). Same drawing as the kit's bake
+     (same palette, same seeded windows), time-sliced in 8ms chunks across frames, then encoded off-thread with toBlob and swapped into image.f-baked. */
+  const img=el.querySelector('image.f-baked');if(!img||!window.SD_FILL){m.rebake();return}sliceBake(m,img)};/* hook for the designer's map.js; a full temp SDMap rebuild costs ~850ms at 4x so it is not used */
  m.onSettle=()=>{if(rebakeQ)setTimeout(rebake,0)};
  m.weather=()=>{const sn=P.classList.contains('map-snow');if(sn!==snowWas){snowWas=sn;rebake()}};
  m.commit=commit;return m}
@@ -1053,10 +1095,10 @@ function drawDynamic(force){if(!map)return;const sig=dynSignature();if(!force&&s
   const t=terr.find(t=>t.ids&&t.ids.includes(b.id)&&!t.contested);
   const lone=t&&t.lone;
   const tgt=tutorialHouse(),inc=S.trips.some(t=>t.crew!=='player'&&t.kind==='raid'&&t.visible&&t.target===b.id),isT=b.id===tgt;
-  const cls='pin'+(npc?' npc':'')+(b.id===S.crews.player.home?' home':'')+(isT?' glow target':'')+(inc?' incoming':'')+(tgt!=null&&!isT&&!inc&&!mine?' quiet':'');
+  const cls='pin'+(npc?' npc':'')+(b.id===S.crews.player.home?' home':'')+(isT?' glow target':'')+(inc?' incoming':'')+(npc&&!isT&&!inc&&b.id!==S.crews.player.home?' quiet':'');
   const col=inc?'':`color:${rival&&!known?'#E8DCC8':FAM[b.owner]||'#E8DCC8'}`;
   const sh=mine&&t&&t.connected&&SD.garrison(S,b.id).length?`<b style="position:absolute;right:2px;top:2px;width:14px;height:14px;color:#E8DCC8">${IC.shield}</b>`:'';
-  map.pin(m.c[0],m.c[1],`<span style="${col}">${g}</span>${sh}`,cls,()=>openSheet(b.id));});
+  const pe=map.pin(m.c[0],m.c[1],`<span style="${col}">${g}</span>${sh}`,cls,()=>openSheet(b.id));pe&&(pe.dataset.bid=b.id);});markRange();
  // district labels
  [['SOUTH END',[300,1250]],['DOWNTOWN',[-60,120]],['OLD NORTH END',[140,-900]],['WATERFRONT',[-520,-180]],['WINOOSKI',[1900,-2400]]].forEach(([t,[x,y]])=>map.pin(x,y,t,'district'));
  // trips: own scout + enemy raid
@@ -1075,8 +1117,8 @@ function tripCard(tr){const mine=tr.crew==='player';openRaw(`<div class="sh-head
 const eta=m=>{const s=Math.round(m*60);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
 // ---------- building sheet ----------
 function openRaw(h){$('#sheet').innerHTML='<div class="handle"></div>'+h;$('#sheet').classList.add('on');$('#scrim').classList.add('on')}
-function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');sel=null;map&&map.paint()}
-function openSheet(id){const b=S.buildings[id],m=B[id];if(m.landmark)return;sel=id;vib(10);if(id===tutorialHouse())SD.flag('tapped');
+function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');sel=null;markRange();map&&map.paint()}
+function openSheet(id){const b=S.buildings[id],m=B[id];if(m.landmark)return;sel=id;markRange();vib(10);if(id===tutorialHouse())SD.flag('tapped');
  const own=b.owner,col=FAM[own]||'#8A7F78',pr=SD_PROPS[m.type],intel=SD.intelOf(S,id);
  const inc=SD.incomeOf(S,id).label,sc$=SD.scoutCost(S,'player');
  let body='';
@@ -1333,7 +1375,7 @@ SD.onTick=structural=>{if(document.hidden){hiddenDirty=hiddenDirty||structural;r
  if(r==='map'||r==='sheet'||r==='trip'||r===''){if(structural)drawDynamic(true);else if(S.trips.length)drawDynamic()}
  if(structural){if(r==='holdings')holdings();if(r==='wire')wire();if(r==='crew')crew()}};
 window.addEventListener('hashchange',route);route();
-window.SDUI={go,openSheet,toast,away};
+window.SDUI={go,openSheet,toast,away,get map(){return map}};
 })();
 </script><script>/* v5 portraits: 12 fictional noir mugshots (ink & grain, cream on charcoal). Inlined so the single-file build carries them.
    SDPortrait(id) -> data URL, deterministic by unit id. Sources: assets/portraits/p01..p12.jpg */
