@@ -690,6 +690,7 @@ input[type=range]{accent-color:var(--cream)}
 .wx-snow .a,.wx-snow .b,.wx-rain .a,.wx-storm .a{animation-duration:30s}
 [class*="backdrop"],.chip{backdrop-filter:none!important}
 .cash.tick{animation:none}.sd-dial .val{animation:none;stroke-dashoffset:0}
+.pin{left:0!important;top:0!important;will-change:transform}.pin.edge{transform:none}.f-baked{pointer-events:none}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -811,17 +812,23 @@ window.SDMap=function(el,o){let api0frame=()=>{};
   const rp=r=>'M'+r.p.map(p=>p.join(' ')).join('L');
   const join=k=>D.roads.filter(r=>r.k===k&&r.p.length>1).map(rp).join('');
   const RD={min:join('min'),maj:join('maj'),mot:join('mot')};
-  add(g,'path',{d:RD.maj+RD.mot,class:'r-glow',filter:'url(#sod)'});
+  add(g,'path',{d:RD.maj+RD.mot,class:'r-glow'});
   ['min','maj','mot'].forEach(k=>add(g,'path',{d:RD[k],class:'r-bed r-bed-'+k,'vector-effect':'non-scaling-stroke'}));
   ['min','maj','mot'].forEach(k=>add(g,'path',{d:RD[k],class:'r-case r-'+k,'vector-effect':'non-scaling-stroke'}));
   // filler city (decorative, non-playable) — fake 2.5D: shadow, side face, roof
-  const F=(window.SD_FILL||[]).map(bp).join('');
-  if(F){add(g,'path',{d:F,class:'f-shadow',transform:'translate(6 9)'});add(g,'path',{d:F,class:'f-side',transform:'translate(2.5 4)'});add(g,'path',{d:F,class:'f-roof','vector-effect':'non-scaling-stroke'})}
-  // v5: scattered warm lit windows on filler buildings (deterministic, decorative)
-  if(window.SD_FILL&&SD_FILL.length){let hi='',lo='',r=1234567;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
-    SD_FILL.forEach(f=>{const v=rnd();if(v>.42)return;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;f.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)});
-      const n=1+Math.floor(rnd()*3);for(let i=0;i<n;i++){const x=(x0+(x1-x0)*(.25+rnd()*.5)).toFixed(1),y=(y0+(y1-y0)*(.25+rnd()*.5)).toFixed(1),q=`M${x} ${y}h2.6v2.6h-2.6z`;if(rnd()<.35)hi+=q;else lo+=q}});
-    add(g,'path',{d:hi,class:'lit-glow',filter:'url(#litblur)'});add(g,'path',{d:lo,class:'lit lit-lo'});add(g,'path',{d:hi,class:'lit lit-hi'})}
+  // v5.6 perf: filler city + lit windows baked once into a single bitmap (was 3 full SVG copies + blur filter)
+  if(window.SD_FILL&&SD_FILL.length){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;SD_FILL.forEach(f=>f.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));
+    x0-=10;y0-=10;x1+=10;y1+=10;const W=x1-x0,H=y1-y0,K=Math.min(3,4096/Math.max(W,H)),cv=document.createElement('canvas');cv.width=Math.ceil(W*K);cv.height=Math.ceil(H*K);
+    const c=cv.getContext('2d'),day=document.body.classList.contains('day'),snow=!!document.querySelector('.map-snow');c.setTransform(K,0,0,K,-x0*K,-y0*K);
+    const poly=(f,dx,dy)=>{c.beginPath();f.forEach(([x,y],i)=>i?c.lineTo(x+dx,y+dy):c.moveTo(x+dx,y+dy));c.closePath()};
+    c.fillStyle=day?'#141A2299':'#0000008c';SD_FILL.forEach(f=>{poly(f,6,9);c.fill()});
+    c.fillStyle=day?'#2E3742':'#0F1216';SD_FILL.forEach(f=>{poly(f,2.5,4);c.fill()});
+    c.fillStyle=snow?(day?'#C9D2DC':'#3A424C'):day?'#8794A3':'#1A1E24';c.strokeStyle=snow?(day?'#E6ECF2':'#6B7682'):day?'#A9B4C0':'#2C323A';c.lineWidth=.7;SD_FILL.forEach(f=>{poly(f,0,0);c.fill();c.stroke()});
+    if(!day){let r=1234567;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+      SD_FILL.forEach(f=>{const v=rnd();if(v>.42)return;let a=1e9,b=1e9,A=-1e9,B=-1e9;f.forEach(([x,y])=>{a=Math.min(a,x);b=Math.min(b,y);A=Math.max(A,x);B=Math.max(B,y)});
+        const n=1+Math.floor(rnd()*3);for(let i=0;i<n;i++){const x=a+(A-a)*(.25+rnd()*.5),y=b+(B-b)*(.25+rnd()*.5),hot=rnd()<.35;
+          if(hot){c.fillStyle='#F2B8602e';c.fillRect(x-2,y-2,6.6,6.6)}c.fillStyle=hot?'#F6C77A':'#B98E4E';c.fillRect(x,y,2.6,2.6)}})}
+    add(g,'image',{href:cv.toDataURL('image/png'),x:x0,y:y0,width:W,height:H,class:'f-baked',preserveAspectRatio:'none'})}
   const halo=add(g,'g',{class:'v5-halo'});
   const routes=add(g,'g',{});
   const blds={};
@@ -852,7 +859,7 @@ window.SDMap=function(el,o){let api0frame=()=>{};
     pins.querySelectorAll('[data-x]').forEach(p=>{let [sx,sy]=api.toScreen(+p.dataset.x,+p.dataset.y);
       if(p.classList.contains('o-rival')){const m=26,top=150,bot=H-170,off=sx<m||sx>W-m||sy<top||sy>bot;p.classList.toggle('edge',off);
         if(off){const a=Math.atan2(sy-H/2,sx-W/2);sx=Math.min(W-m,Math.max(m,sx));sy=Math.min(bot,Math.max(top,sy));p.style.setProperty('--a',(a*180/Math.PI+90)+'deg')}}
-      p.style.left=sx+'px';p.style.top=sy+'px'});
+      p.style.transform=`translate3d(${sx}px,${sy}px,0)`+(p.classList.contains('edge')?' scale(.72)':'')});
   };
   api.pin=(x,y,html,cls,on)=>{const d=document.createElement('button');d.className=cls;d.dataset.x=x;d.dataset.y=y;d.innerHTML=html;if(on)d.onclick=e=>{e.stopPropagation();on()};pins.appendChild(d);return d};
   api.line=(pts,a)=>add(routes,'path',Object.assign({d:'M'+pts.map(p=>p.join(' ')).join('L'),fill:'none','vector-effect':'non-scaling-stroke'},a));
@@ -997,22 +1004,39 @@ function drawFootholds(api,list){const L=api.routes.previousSibling;if(!L||!list
 /* perf: pan/zoom move the already-painted SVG + pin layer with a compositor transform; the real repaint
    (map.js paint: every building class + every pin's left/top) runs once, 140ms after the gesture settles.
    toScreen uses cached el size instead of clientWidth per pin (that forced a layout per pin). */
-function fastMap(m){const el=m.el,svg=el.querySelector('svg'),pins=m.pins,orig=m.paint,v=m.view;let W=el.clientWidth,H=el.clientHeight;
- new ResizeObserver(()=>{W=el.clientWidth;H=el.clientHeight;commit()}).observe(el);
+function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,orig=m.paint,v=m.view;let W=el.clientWidth,H=el.clientHeight,M=0;
+ /* edge margin: the SVG is drawn M px past every edge, so a drag shows real map (incl. the designer's baked filler image) instead of blank */
+ const size=()=>{W=el.clientWidth;H=el.clientHeight;M=Math.round(Math.max(W,H)*.5);if(!svg)return;Object.assign(svg.style,{left:-M+'px',top:-M+'px',width:W+2*M+'px',height:H+2*M+'px',inset:'auto'});svg.setAttribute('viewBox',`${-M} ${-M} ${W+2*M} ${H+2*M}`)};size();
+ const ro=new ResizeObserver(()=>{if(!svg.isConnected){ro.disconnect();return}size();commit()});ro.observe(el);
  m.toScreen=(x,y)=>[(x-v.x)*v.s+W/2,(y-v.y)*v.s+H/2];
  let com=null,timer=0,gest=0;const L=[svg,pins].filter(Boolean);L.forEach(e=>e.style.willChange='transform');
- const commit=()=>{clearTimeout(timer);timer=0;L.forEach(e=>e.style.transform='');com={x:v.x,y:v.y,s:v.s};orig()};
- const settle=()=>{clearTimeout(timer);timer=setTimeout(()=>{gest=0;commit()},140)};
- el.addEventListener('pointerdown',()=>{gest=1},true);el.addEventListener('wheel',()=>{gest=1;settle()},{capture:true,passive:true});addEventListener('pointerup',()=>{if(gest)settle()},true);
- m.paint=()=>{if(!com||!gest){commit();return}const k=v.s/com.s,tx=(com.x-v.x)*v.s,ty=(com.y-v.y)*v.s,o=`${W/2}px ${H/2}px`,tf=`translate3d(${tx}px,${ty}px,0) scale(${k})`;
-  L.forEach(e=>{e.style.transformOrigin=o;e.style.transform=tf})};
+ const commit=()=>{clearTimeout(timer);timer=0;L.forEach(e=>e.style.transform='');com={x:v.x,y:v.y,s:v.s};orig();m.onSettle&&m.onSettle()};
+ const settle=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return;gest=0;commit()},140)};
+ el.addEventListener('pointerdown',()=>{gest=1},true);el.addEventListener('wheel',()=>{gest=1;settle()},{capture:true,passive:true});addEventListener('pointerup',()=>{if(gest&&svg.isConnected)settle()},true);
+ m.paint=()=>{if(!com||!gest){commit();return}const k=v.s/com.s,tx=(com.x-v.x)*v.s,ty=(com.y-v.y)*v.s,tf=`translate3d(${tx}px,${ty}px,0) scale(${k})`;
+  if(svg){svg.style.transformOrigin=`${M+W/2}px ${M+H/2}px`;svg.style.transform=tf}pins.style.transformOrigin=`${W/2}px ${H/2}px`;pins.style.transform=tf};
+ /* pinch-to-zoom: two pointers on the map. While pinching (and until every finger lifts) map.js's own drag/tap handlers are held off. */
+ const pts=new Map();let pin=null,hold=false;const S0=.15,S1=4;
+ const mid=()=>{const a=[...pts.values()],r=el.getBoundingClientRect();return{x:(a[0].x+a[1].x)/2-r.left,y:(a[0].y+a[1].y)/2-r.top,d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1}};
+ el.addEventListener('pointerdown',e=>{if(!svg.isConnected)return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const q=mid();pin={d:q.d,s:v.s,wx:(q.x-W/2)/v.s+v.x,wy:(q.y-H/2)/v.s+v.y};hold=true;gest=1;e.stopPropagation()}},true);
+ addEventListener('pointermove',e=>{if(!svg.isConnected||!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!hold)return;e.stopImmediatePropagation();
+  if(pin&&pts.size>=2){const q=mid();v.s=Math.min(S1,Math.max(S0,pin.s*q.d/pin.d));v.x=pin.wx-(q.x-W/2)/v.s;v.y=pin.wy-(q.y-H/2)/v.s;m.paint()}},true);
+ const up=e=>{if(!svg.isConnected||!pts.delete(e.pointerId))return;if(hold){e.stopImmediatePropagation();if(pts.size<2)pin=null;if(!pts.size){hold=false;settle()}}};
+ addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);
+ m.pinchTest=(cx,cy,f)=>{const s0=v.s,w=(cx-W/2)/v.s+v.x;v.s=Math.min(S1,Math.max(S0,v.s*f));v.x=w-(cx-W/2)/v.s;gest=1;m.paint();settle();return[s0,v.s]};
+ /* snow re-bake: the designer's map.js bakes filler roofs once at build. When snow flips (weather refreshes every 30 game-min),
+    call their api.rebake() if they expose one, deferred until no drag/pinch is in progress. */
+ let snowWas=P.classList.contains('map-snow'),rebakeQ=false;
+ const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake==='function')m.rebake()};/* hook for the designer's map.js; a full temp SDMap rebuild costs ~850ms at 4x so it is not used */
+ m.onSettle=()=>{if(rebakeQ)setTimeout(rebake,0)};
+ m.weather=()=>{const sn=P.classList.contains('map-snow');if(sn!==snowWas){snowWas=sn;rebake()}};
  m.commit=commit;return m}
 let dynSig='',dynTrips=[];
 function dynSignature(){const tp=tutorialHouse();return [S.buildings.map(b=>b.owner?b.owner[0]+(SD.intelOf(S,b.id)?1:0)+(b.owner==='player'?SD.garrison(S,b.id).length?1:0:''):'').join(''),tp,S.crews.player.home,
   S.trips.filter(t=>t.crew==='player'||t.visible).map(t=>t.id+t.kind+t.target).join(','),P.classList.contains('god')?1:0].join('|')}
 /* trips only moved: move their chevrons + nothing else */
 function moveTrips(){for(const d of dynTrips){const tr=S.trips.find(t=>t.id===d.id);if(!tr){dynSig='';return drawDynamic()}const pts=d.pts,k=SD.tripProgress(S,tr),at=SD.along(pts,k),nx=SD.along(pts,Math.min(1,k+.03)),pv=SD.along(pts,Math.max(0,k-.03));
-  d.el.dataset.x=at[0];d.el.dataset.y=at[1];const [sx,sy]=map.toScreen(at[0],at[1]);d.el.style.left=sx+'px';d.el.style.top=sy+'px';d.el.firstChild.style.transform=`rotate(${Math.atan2(nx[1]-pv[1],nx[0]-pv[0])*180/Math.PI+90}deg)`}}
+  d.el.dataset.x=at[0];d.el.dataset.y=at[1];const [sx,sy]=map.toScreen(at[0],at[1]);d.el.style.transform=`translate3d(${sx}px,${sy}px,0)`;d.el.firstChild.style.transform=`rotate(${Math.atan2(nx[1]-pv[1],nx[0]-pv[0])*180/Math.PI+90}deg)`}}
 function drawDynamic(force){if(!map)return;const sig=dynSignature();if(!force&&sig===dynSig&&dynTrips.length===S.trips.filter(t=>t.crew==='player'||t.visible).length){moveTrips();return}dynSig=sig;dynTrips=[];map.pins.innerHTML='';map.routes.innerHTML='';if(map.turfLayer)map.turfLayer.remove();
  const terr=SD.getTerritories(S);
  const BK=window.SD_BLOCKS||[],blockOf=id=>BK.find(k=>k.ids.includes(id));
@@ -1263,7 +1287,7 @@ let ghostEls=[];function ghosts(){ghostEls.forEach(e=>e.remove());ghostEls=[];$(
  SD.ghostRoutes(S).forEach(p=>ghostEls.push(map.line(p,{class:'ghost-route'})));
  $('#screen-map').insertAdjacentHTML('beforeend','<div class="godtag">TEST · GOD VIEW</div>')}
 // ---------- weather ----------
-function paintWeather(){const w=SD.getWeather();$('#wx').className='wx wx-'+w.kind;$('#wx').innerHTML='<i class="a"></i><i class="b"></i><i class="c"></i>';P.classList.toggle('day',!!w.isDay);P.classList.toggle('map-snow',w.kind==='snow')}
+function paintWeather(){const w=SD.getWeather();$('#wx').className='wx wx-'+w.kind;$('#wx').innerHTML='<i class="a"></i><i class="b"></i><i class="c"></i>';P.classList.toggle('day',!!w.isDay);P.classList.toggle('map-snow',w.kind==='snow');map&&map.weather&&map.weather()}
 // ---------- router ----------
 const FULL=['war','report','title','onboard'];
 function go(h){location.hash='#'+h}
