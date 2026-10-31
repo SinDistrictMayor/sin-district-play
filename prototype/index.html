@@ -1136,15 +1136,19 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  /* clamp: the screen never leaves the plate, so no blank edges */
  const clamp=()=>{const S0=Math.max(.15,W/(X1-X0),H/(Y1-Y0));if(v.s<S0)v.s=S0;const hw=W/2/v.s,hh=H/2/v.s;v.x=Math.min(X1-hw,Math.max(X0+hw,v.x));v.y=Math.min(Y1-hh,Math.max(Y0+hh,v.y))};
  /* plate space: world (x,y) -> ((x-X0)*s, (y-Y0)*s) inside the pin layer; layer translate puts the view centre mid-screen */
- m.toScreen=(x,y)=>[(x-X0)*v.s,(y-Y0)*v.s];m.toView=(x,y)=>[(x-v.x)*v.s+W/2,(y-v.y)*v.s+H/2];
- let pinS=-1;const placePins=()=>{pinS=v.s;pins.querySelectorAll('[data-x]').forEach(p=>{const[sx,sy]=m.toScreen(+p.dataset.x,+p.dataset.y);p.style.transform=`translate3d(${sx}px,${sy}px,0)`})};
- const edges=()=>{const tx=W/2-(v.x-X0)*v.s,ty=H/2-(v.y-Y0)*v.s,mg=26,top=150,bot=H-170;
+ /* pin layer is laid out at scale L (last settled zoom); mid-pinch the layer itself scales by v.s/L and children counter-scale via --ik, so nothing is rewritten per frame */
+ let L=v.s;m.layerS=()=>L;m.toScreen=(x,y)=>[(x-X0)*L,(y-Y0)*L];m.pos=(sx,sy,x)=>`translate3d(${sx}px,${sy}px,0) scale(var(--ik,1))`+(x||'');m.externalLayout=true;m.toView=(x,y)=>[(x-v.x)*v.s+W/2,(y-v.y)*v.s+H/2];
+ const put=p=>{const[sx,sy]=m.toScreen(+p.dataset.x,+p.dataset.y);p.style.transform=m.pos(sx,sy);p.dataset.pl=L};
+ const placePins=()=>{L=v.s;pins.querySelectorAll('[data-x]').forEach(put)};
+ /* mid-gesture: only nodes created since the last layout get a one-time placement in the current layer space; existing nodes are never touched */
+ const placeNew=()=>{pins.querySelectorAll('[data-x]').forEach(p=>{if(p.dataset.pl!=String(L))put(p)})};
+ const edges=()=>{if(gest||pts.size)return;if(v.s!==L)placePins();const tx=W/2-(v.x-X0)*L,ty=H/2-(v.y-Y0)*L,mg=26,top=150,bot=H-170;
   pins.querySelectorAll('.o-rival[data-x]').forEach(p=>{let[sx,sy]=m.toView(+p.dataset.x,+p.dataset.y);const off=sx<mg||sx>W-mg||sy<top||sy>bot;p.classList.toggle('edge',off);
    if(off){const a=Math.atan2(sy-H/2,sx-W/2);sx=Math.min(W-mg,Math.max(mg,sx));sy=Math.min(bot,Math.max(top,sy));p.style.setProperty('--a',(a*180/Math.PI+90)+'deg')}
-   p.style.transform=`translate3d(${sx-tx}px,${sy-ty}px,0)`+(off?' scale(.72)':'')})};
+   p.style.transform=m.pos(sx-tx,sy-ty,off?' scale(.72)':'');p.dataset.pl=L})};
  /* the one transform: two compositor writes per frame */
  const place=()=>{clamp();const k=v.s/P,tx=W/2-(v.x-X0)*v.s,ty=H/2-(v.y-Y0)*v.s;
-  if(svg)svg.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${k})`;pins.style.transform=`translate3d(${tx}px,${ty}px,0)`;if(v.s!==pinS)placePins()};
+  if(svg)svg.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${k})`;const q=v.s/L;pins.style.transform=`translate3d(${tx}px,${ty}px,0)`+(q!==1?` scale(${q})`:'');pins.style.setProperty('--ik',q!==1?1/q:1);if(!(gest||pts.size)&&v.s!==L){placePins();place()}};
  /* record a plate: size the SVG to the whole city at plate scale P, world transform fixed in plate space */
  const plate=p=>{P=p;if(!svg)return;const pw=Math.ceil((X1-X0)*P),ph=Math.ceil((Y1-Y0)*P);
   Object.assign(svg.style,{inset:'auto',left:'0px',top:'0px',width:pw+'px',height:ph+'px',transformOrigin:'0 0',willChange:'transform'});svg.setAttribute('viewBox',`0 0 ${pw} ${ph}`);
@@ -1155,7 +1159,7 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  const commit=()=>{if(gest||pts.size){dirty=true;return}dirty=false;clamp();orig();if(g)g.setAttribute('transform',`scale(${P}) translate(${-X0} ${-Y0})`);placePins();place();edges();cz();markRange();layoutDiscs();m.onSettle&&m.onSettle()};
  const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place();m.swapPlate&&m.swapPlate()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle();if(window.SDUI_map)setTimeout(loadSnow,0)};
  const settle=(ms=300)=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return settle(ms);idle()},ms)};
- m.paint=()=>{if(gest||pts.size){place();return}commit()};
+ m.paint=()=>{if(gest||pts.size){placeNew();place();return}commit()};
  const size=()=>{W=el.clientWidth;H=el.clientHeight};
  const ro=new ResizeObserver(()=>{if(!svg.isConnected){ro.disconnect();return}size();place();edges()});ro.observe(el);
  el.addEventListener('pointerdown',()=>{gest=1;clearTimeout(timer)},true);el.addEventListener('wheel',()=>{gest=1;settle(200)},{capture:true,passive:true});
@@ -1221,7 +1225,7 @@ function layoutDiscs(){if(!map||!map.pins)return;const pins=map.pins,street=pins
  C.sort((a,b)=>PRI[b.k]-PRI[a.k]);const kept=[];
  for(const d of C){const r=(d.k==='target'||d.k==='incoming'?48:44)/2;if(kept.some(q=>Math.hypot((q.c[0]-d.c[0])*s,(q.c[1]-d.c[1])*s)<r+q.r))continue;d.r=r;kept.push(d)}
  const frag=document.createDocumentFragment();for(const d of kept){const e=document.createElement('button');e.className='lot-hit '+d.k+(d.reach?' reach':'');e.dataset.x=d.c[0];e.dataset.y=d.c[1];e.dataset.hit=d.id;e.dataset.bid=d.id;e.dataset.kind=d.k;
-  e.setAttribute('aria-label',B[d.id].name||'Lot');const[sx,sy]=map.toScreen(d.c[0],d.c[1]);e.style.transform=`translate3d(${sx}px,${sy}px,0)`;/* centred by kit margin -r (placePins rewrites transform on zoom) */frag.appendChild(e)}
+  e.setAttribute('aria-label',B[d.id].name||'Lot');const[sx,sy]=map.toScreen(d.c[0],d.c[1]);e.style.transform=map.pos(sx,sy);e.dataset.pl=map.layerS();/* centred by kit margin -r (placePins rewrites transform on zoom) */frag.appendChild(e)}
  pins.appendChild(frag);if(window.SDUI)SDUI.discs=kept.length}
 /* tap outcomes (game design phase 2) */
 function discAct(id,k,reach){window.__lastDisc={id,k,scouted:SD.isScouted(S,id)};if(k!=='incoming'&&k!=='yours'&&SD.isScouted(S,id)){window.__lastSheet='war:'+id;return go('war/'+id)}/* scouted (b.scouted, fresh) rival/npc/target -> War Room w/ odds */
@@ -1262,7 +1266,7 @@ function dynSignature(){const tp=tutorialHouse();return [S.buildings.map(b=>b.ow
   S.trips.filter(t=>t.crew==='player'||t.visible).map(t=>t.id+t.kind+t.target).join(','),P.classList.contains('god')?1:0].join('|')}
 /* trips only moved: move their chevrons + nothing else */
 function moveTrips(){for(const d of dynTrips){const tr=S.trips.find(t=>t.id===d.id);if(!tr){dynSig='';return drawDynamic()}const pts=d.pts,k=SD.tripProgress(S,tr),at=SD.along(pts,k),nx=SD.along(pts,Math.min(1,k+.03)),pv=SD.along(pts,Math.max(0,k-.03));
-  d.el.dataset.x=at[0];d.el.dataset.y=at[1];const [sx,sy]=map.toScreen(at[0],at[1]);d.el.style.transform=`translate3d(${sx}px,${sy}px,0)`;d.el.firstChild.style.transform=`rotate(${Math.atan2(nx[1]-pv[1],nx[0]-pv[0])*180/Math.PI+90}deg)`}}
+  d.el.dataset.x=at[0];d.el.dataset.y=at[1];const [sx,sy]=map.toScreen(at[0],at[1]);d.el.style.transform=map.pos(sx,sy);d.el.dataset.pl=map.layerS();d.el.firstChild.style.transform=`rotate(${Math.atan2(nx[1]-pv[1],nx[0]-pv[0])*180/Math.PI+90}deg)`}}
 function drawDynamic(force){if(!map)return;const sig=dynSignature();if(!force&&sig===dynSig&&dynTrips.length===S.trips.filter(t=>t.crew==='player'||t.visible).length){moveTrips();return}dynSig=sig;dynTrips=[];map.pins.innerHTML='';map.routes.innerHTML='';if(map.turfLayer)map.turfLayer.remove();
  const terr=SD.getTerritories(S);
  const BK=window.SD_BLOCKS||[],blockOf=id=>BK.find(k=>k.ids.includes(id));
@@ -1559,7 +1563,7 @@ SD.onTick=structural=>{scarTick();if(document.hidden){hiddenDirty=hiddenDirty||s
  if(r==='map'||r==='sheet'||r==='trip'||r===''){if(structural)drawDynamic(true);else if(S.trips.length)drawDynamic()}
  if(structural){if(r==='holdings')holdings();if(r==='wire')wire();if(r==='crew')crew()}};
 window.addEventListener('hashchange',route);route();
-window.SDUI={go,openSheet,selectUnit:id=>{selUnit=id;markRange();layoutDiscs()},toast,away,get map(){return map}};
+window.SDUI={go,openSheet,redraw:f=>drawDynamic(f),selectUnit:id=>{selUnit=id;markRange();layoutDiscs()},toast,away,get map(){return map}};
 })();
 </script><script>/* v5 portraits: 12 fictional noir mugshots (ink & grain, cream on charcoal). Inlined so the single-file build carries them.
    SDPortrait(id) -> data URL, deterministic by unit id. Sources: assets/portraits/p01..p12.jpg */
