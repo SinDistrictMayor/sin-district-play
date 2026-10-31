@@ -112,7 +112,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 .r-min{stroke:#1A1D22}.r-maj{stroke:#262B32}.r-mot{stroke:#3A414A}
 .lake{fill:#0C1218}
 .bld{stroke-linejoin:round}
-.b-free{fill:#191C21;stroke:#262B32;stroke-width:1}
+.b-free{fill:none;stroke:#8A7F78;stroke-width:1;stroke-opacity:.45}
 .b-npc{fill:#8A7F7859;stroke:#8A7F78;stroke-dasharray:4 3;stroke-width:1.2}
 .b-land{fill:#8A7F7840;stroke:none}
 .b-player{fill:#E8DCC8b3;stroke:#E8DCC8;stroke-width:1.5}.b-earner{fill:#6F8A4Eb3;stroke:#6F8A4E;stroke-width:1.5}
@@ -357,7 +357,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--cream)}
 @keyframes shimmer{to{transform:translateY(3px);opacity:.3}}
 /* day: cold slate-blue paper tone */
 .day #map{background:#2b3440}.day .lake{fill:#1f2a36}.day .r-min{stroke:#4a5562}.day .r-maj{stroke:#3A414A}.day .r-case{stroke:#323c48}
-.day .b-free{fill:#3a4450;stroke:#4a5562}.day .sodium{background:radial-gradient(140% 90% at 50% 50%,transparent 55%,#141c26 100%)}
+.day .b-free{fill:none;stroke:#8A7F78;stroke-opacity:.5}.day .sodium{background:radial-gradient(140% 90% at 50% 50%,transparent 55%,#141c26 100%)}
 .day #map::after{content:"";position:absolute;inset:0;background:#9fb3c814;mix-blend-mode:screen;pointer-events:none}
 .wxchip{display:inline-flex;align-items:center;gap:4px;font:600 12px var(--font-num);color:var(--cream)}
 .wxchip svg{width:14px;height:14px}
@@ -444,7 +444,7 @@ input[type=range]{accent-color:var(--cream)}
 .f-side{fill:#0F1216}
 .f-roof{fill:#1A1E24;stroke:#2C323A;stroke-width:.7}
 .bld{stroke-linejoin:round}
-.b-free{fill:#252A31;stroke:#4A515B;stroke-width:1}
+.b-free{fill:none;stroke:#8A7F78;stroke-width:1;stroke-opacity:.45}
 .b-npc{fill:#2A2E34;stroke:#8A7F78;stroke-dasharray:3 2;stroke-width:1.1}
 .b-land{fill:#1E2228;stroke:#3A414A;stroke-width:.8}
 .b-player{fill:#E8DCC8;fill-opacity:.85;stroke:#F4EFE6;stroke-width:1.4;filter:drop-shadow(0 0 5px #E8DCC899)}
@@ -464,7 +464,7 @@ input[type=range]{accent-color:var(--cream)}
 .day .r-bed{stroke:#3B4450}
 .day .r-min{stroke:#C9CFD6;stroke-opacity:.55}.day .r-maj{stroke:#EDE6D8;stroke-opacity:.95}.day .r-mot{stroke:#F6EEDC}
 .day .f-shadow{fill:#1B2129;fill-opacity:.45}.day .f-side{fill:#3A434E}.day .f-roof{fill:#6E7987;stroke:#8893A0}
-.day .b-free{fill:#7A8592;stroke:#A4AEB9}.day .b-npc{fill:#6A7480}.day .b-land{fill:#66717D}
+.day .b-free{fill:none;stroke:#8A7F78;stroke-opacity:.5}.day .b-npc{fill:none}.day .b-land{fill:none;stroke:#8A7F78}
 .day .sodium{background:radial-gradient(120% 70% at 30% 0,#DCE6F026,transparent 60%),radial-gradient(140% 90% at 50% 50%,transparent 55%,#1B222B 100%)}
 .day #map::after{background:linear-gradient(#E8EEF412,#00000000)}
 .day .district{color:#F4EFE6;opacity:.8;text-shadow:0 1px 2px #1B222B}
@@ -736,7 +736,7 @@ input[type=range]{accent-color:var(--cream)}
 .bld.b-player{stroke:var(--cream)!important;stroke-opacity:.95}.bld.b-earner{stroke:#6F8A4E!important;stroke-opacity:.95}
 .bld.b-shooter{stroke:#C8323C!important;stroke-opacity:.95}.bld.b-politician{stroke:#6A4C7A!important;stroke-opacity:.95}
 .bld.b-npc{stroke:#8A7F78!important;stroke-opacity:.7}
-.bld.b-free{fill-opacity:0!important;stroke:#8A7F78;stroke-opacity:.45}
+.bld.b-free,.b-free{fill:none!important;fill-opacity:0!important;stroke:#8A7F78!important;stroke-opacity:.45}
 
 /* plate owns ALL roofs (incl. free lots): fill 0, stroke only */svg.has-plate .bld,svg.has-plate .bld.reachable,svg.has-plate .b-free,.day svg.has-plate .b-free{fill-opacity:0!important}</style></head><body>
 <div class="phone velvet" id="phone">
