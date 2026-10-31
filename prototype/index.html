@@ -712,6 +712,14 @@ input[type=range]{accent-color:var(--cream)}
 .lot-scar.fade{opacity:0;transition:opacity 1.2s}
 .bld.scar-stamp{animation:scar-stamp 1s ease-out forwards;stroke:#E8DCC8!important;stroke-width:3.5;stroke-opacity:1;fill:#E8DCC8!important;fill-opacity:.4!important}
 @keyframes scar-stamp{0%{filter:drop-shadow(0 0 0 #E8DCC8);stroke-width:10}45%{filter:drop-shadow(0 0 16px #E8DCC8dd);stroke-width:3.5}100%{filter:none}}
+/* v5.8 Pieces hit discs — tap-the-land (round 4 lock). Bake stays pointer-events none. */
+.lot-hit{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;left:0;top:0;border-radius:50%;border:0;padding:0;background:transparent;pointer-events:auto;z-index:7;-webkit-tap-highlight-color:transparent}
+.lot-hit.target,.lot-hit.incoming{width:48px;height:48px;margin:-24px 0 0 -24px}
+.lot-hit::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid transparent;opacity:0;pointer-events:none}
+.lot-hit.press::after,.lot-hit:active::after{border-color:rgba(232,220,200,.4);opacity:1;animation:hit-press .1s ease-out forwards}
+@keyframes hit-press{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1);opacity:0}}
+.lot-hit .pin-label{pointer-events:none}
+#map svg.city,.f-baked,#map .ground{pointer-events:none!important}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -888,7 +896,8 @@ window.SDMap=function(el,o){let api0frame=()=>{};
     g.setAttribute('transform',`translate(${sw/2} ${sh/2}) scale(${view.s}) translate(${-view.x} ${-view.y})`);
     if(el.id==='map')SDMap.v5(api,S,o);
     const W=el.clientWidth,H=el.clientHeight;
-    pins.querySelectorAll('[data-x]').forEach(p=>{let [sx,sy]=api.toScreen(+p.dataset.x,+p.dataset.y);
+    /* When api.externalLayout is true the host owns pin/world transforms (basemap spike). Skip kit position math. */
+    if(!api.externalLayout)pins.querySelectorAll('[data-x]').forEach(p=>{let [sx,sy]=api.toScreen(+p.dataset.x,+p.dataset.y);
       if(p.classList.contains('o-rival')){const m=26,top=150,bot=H-170,off=sx<m||sx>W-m||sy<top||sy>bot;p.classList.toggle('edge',off);
         if(off){const a=Math.atan2(sy-H/2,sx-W/2);sx=Math.min(W-m,Math.max(m,sx));sy=Math.min(bot,Math.max(top,sy));p.style.setProperty('--a',(a*180/Math.PI+90)+'deg')}}
       p.style.transform=`translate3d(${sx}px,${sy}px,0)`+(p.classList.contains('edge')?' scale(.72)':'')});
@@ -1035,14 +1044,18 @@ let map,sel=null;
 function initMap(){
  const home=B[S.crews.player.home].c;
  {const sm=$('#smap');if(sm)sm.remove()}/* onboarding spawn map must not survive: its .pin.home doubled the home pin */
- map=fastMap(SDMap($('#map'),{state:S,center:[home[0]-60,home[1]+120],scale:.42,onTap:openSheet}));
+ const mo={state:S,center:[home[0]-60,home[1]+120],scale:.42,onTap:openSheet};map=fastMap(SDMap($('#map'),mo));mo.onTap=null;/* land discs own taps */
  drawDynamic();
  /* load gate (Basemap v1): map stays dark and Continue stays dead until the bake is decoded and the first plate has painted */
  P.classList.remove('map-ready');const mel=$('#map');mel.classList.add('map-loading');const mm=map;map.ready.then(()=>{if(map!==mm)return;mel.classList.remove('map-loading');P.classList.add('map-ready')});
 }
 {const st=document.createElement('style');st.textContent=`#map.map-loading>svg,#map.map-loading>.pins{opacity:0}#map>svg,#map>.pins{transition:opacity .3s}
 #phone:not(.map-ready) [data-go="map"]{pointer-events:none;opacity:.45}
-.city-zoom .pin.quiet:not(.inrange){display:none}`;document.head.appendChild(st)}
+.city-zoom .pin.quiet:not(.inrange){display:none}
+.full:not(.on){pointer-events:none!important}.full:not(.on) *{pointer-events:none!important}
+#map svg.city,#map svg.city *{pointer-events:none!important}
+#map .pin:not(.edge){pointer-events:none}
+#phone:has(.full.on) .lot-hit{pointer-events:none!important}`;document.head.appendChild(st)}
 // rival turf tint: path.turf-block.<crew> (kit CSS: strong wash under .street-zoom, fades under .city-zoom)
 function drawRivalTint(api,list){const L=api.routes.previousSibling;if(!L)return;const NS='http://www.w3.org/2000/svg';list.forEach(t=>{const e=document.createElementNS(NS,'path');e.setAttribute('class','turf-block '+t.crew);e.dataset.crew=t.crew;e.setAttribute('d','M'+t.poly.map(q=>q.map(v=>v.toFixed(1)).join(' ')).join('L')+'Z');L.insertBefore(e,L.firstChild)})}
 // foothold = owner holds 2+ buildings in a block but not >50%: faint dashed outline, no fill (class turf-foothold)
@@ -1116,8 +1129,8 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  Object.assign(pins.style,{inset:'auto',left:'0px',top:'0px',width:'0px',height:'0px',overflow:'visible',transformOrigin:'0 0',willChange:'transform'});
  let gest=0,timer=0,dirty=false;
  /* game-state repaint (classes, v5 pins, influence) — never during a gesture; kit paint's own g/pin transforms are overwritten in plate space */
- const commit=()=>{if(gest||pts.size){dirty=true;return}dirty=false;clamp();orig();if(g)g.setAttribute('transform',`scale(${P}) translate(${-X0} ${-Y0})`);placePins();place();edges();cz();markRange();m.onSettle&&m.onSettle()};
- const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place()}cz();edges();if(dirty)commit();m.onSettle&&m.onSettle()};
+ const commit=()=>{if(gest||pts.size){dirty=true;return}dirty=false;clamp();orig();if(g)g.setAttribute('transform',`scale(${P}) translate(${-X0} ${-Y0})`);placePins();place();edges();cz();markRange();layoutDiscs();m.onSettle&&m.onSettle()};
+ const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle()};
  const settle=(ms=300)=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return settle(ms);idle()},ms)};
  m.paint=()=>{if(gest||pts.size){place();return}commit()};
  const size=()=>{W=el.clientWidth;H=el.clientHeight};
@@ -1144,6 +1157,33 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  plate(plateFor(v.s));
  m.commit=commit;m.settleNow=idle;window.SDUI_map=m;/* test handle */return m}
 let dynSig='',dynTrips=[];
+/* Tap-the-land (round 4): every citizen lot gets an invisible .lot-hit disc (kit CSS, 44px / 48px target+incoming) in the pin layer,
+   so it rides the ONE shared transform (placePins writes plate-space translate3d, layer translate = pan). Pins are labels only.
+   Citizens: city zoom = yours, home, target, incoming, rival, npc. Street zoom or selected-unit reach adds unowned. Overlap: higher priority wins. */
+const PRI={incoming:6,target:5,yours:4,rival:3,npc:2,free:1};/* NPC lots are city citizens (GD final) */
+function discKind(id){const b=S.buildings[id];if(S.trips.some(t=>t.crew!=='player'&&t.kind==='raid'&&t.visible&&t.target===id))return'incoming';if(id===tutorialHouse())return'target';
+ if(b.owner==='player'||id===S.crews.player.home)return'yours';if(b.owner==='npc')return'npc';if(b.owner)return'rival';return'free'}
+function layoutDiscs(){if(!map||!map.pins)return;const pins=map.pins,street=pins.classList.contains('street-zoom'),o=rangeOrigin(),s=map.view.s;
+ pins.querySelectorAll('.lot-hit').forEach(e=>e.remove());const C=[];
+ S.buildings.forEach(b=>{const m=B[b.id];if(!m||m.landmark||!m.type)return;const k=discKind(b.id),reach=!!(o&&Math.hypot(m.c[0]-o[0],m.c[1]-o[1])<=INRANGE_M);
+  if(k==='free'&&!street&&!reach)return;C.push({id:b.id,k,reach,c:m.c})});
+ C.sort((a,b)=>PRI[b.k]-PRI[a.k]);const kept=[];
+ for(const d of C){const r=(d.k==='target'||d.k==='incoming'?48:44)/2;if(kept.some(q=>Math.hypot((q.c[0]-d.c[0])*s,(q.c[1]-d.c[1])*s)<r+q.r))continue;d.r=r;kept.push(d)}
+ const frag=document.createDocumentFragment();for(const d of kept){const e=document.createElement('button');e.className='lot-hit '+d.k+(d.reach?' reach':'');e.dataset.x=d.c[0];e.dataset.y=d.c[1];e.dataset.hit=d.id;e.dataset.kind=d.k;
+  e.setAttribute('aria-label',B[d.id].name||'Lot');const[sx,sy]=map.toScreen(d.c[0],d.c[1]);e.style.transform=`translate3d(${sx}px,${sy}px,0)`;frag.appendChild(e)}
+ pins.appendChild(frag);if(window.SDUI)SDUI.discs=kept.length}
+/* tap outcomes (game design phase 2) */
+function discAct(id,k,reach){if(k==='rival'&&SD.intelOf(S,id))return go('war/'+id);
+ if(k==='free'&&reach&&selUnit!=null&&typeof moveConfirm==='function')return moveConfirm(selUnit,id);openSheet(id)}
+{let dn=null;document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.lot-hit');dn=h&&e.isPrimary?{h,x:e.clientX,y:e.clientY,id:e.pointerId}:null;if(h)h.classList.add('press')},true);
+ const cancel=()=>{if(dn){dn.h.classList.remove('press');dn=null}};
+ addEventListener('pointermove',e=>{if(dn&&e.pointerId===dn.id&&Math.hypot(e.clientX-dn.x,e.clientY-dn.y)>12)cancel()},true);
+ addEventListener('pointercancel',cancel,true);
+ let gd=null;document.addEventListener('pointerdown',e=>{const m=$('#map');gd=e.isPrimary&&m&&m.contains(e.target)&&!e.target.closest('.lot-hit,.pin,.chev')?{x:e.clientX,y:e.clientY}:null},true);
+ addEventListener('pointerup',e=>{const g=gd;gd=null;if(g&&Math.hypot(e.clientX-g.x,e.clientY-g.y)<8&&(sel!=null||selUnit!=null)){sel=null;selUnit=null;markRange();layoutDiscs()}},true);
+ addEventListener('pointerdown',e=>{if(dn&&!e.isPrimary)cancel()},true);/* second finger = pinch, not tap */
+ addEventListener('pointerup',e=>{if(!dn||e.pointerId!==dn.id)return;const{h}=dn;dn=null;if(Math.hypot(e.clientX-h.getBoundingClientRect().left-h.offsetWidth/2,0)>80){h.classList.remove('press');return}
+  const id=+h.dataset.hit,k=h.dataset.kind,reach=h.classList.contains('reach');setTimeout(()=>{h.classList.remove('press');discAct(id,k,reach)},100)},true)}
 function dynSignature(){const tp=tutorialHouse();return [S.buildings.map(b=>b.owner?b.owner[0]+(SD.intelOf(S,b.id)?1:0)+(b.owner==='player'?SD.garrison(S,b.id).length?1:0:''):'').join(''),tp,S.crews.player.home,
   S.trips.filter(t=>t.crew==='player'||t.visible).map(t=>t.id+t.kind+t.target).join(','),P.classList.contains('god')?1:0].join('|')}
 /* trips only moved: move their chevrons + nothing else */
@@ -1177,7 +1217,7 @@ function drawDynamic(force){if(!map)return;const sig=dynSignature();if(!force&&s
   const ang=Math.atan2(nx[1]-pv[1],nx[0]-pv[0])*180/Math.PI+90;
   const ce=map.pin(at[0],at[1],`<span style="color:${c};transform:rotate(${ang}deg);display:grid">${IC.shooter}</span>`,'chev',()=>tripCard(tr));dynTrips.push({id:tr.id,el:ce,pts});});
  // ghost routes (test mode only)
- ghosts();map.paint();
+ ghosts();map.paint();layoutDiscs();
 }
 const tutorialHouse=()=>SD.tutorialHouse(S);
 function tripCard(tr){const mine=tr.crew==='player';openRaw(`<div class="sh-head"><div class="tglyph" style="color:${mine?'#E8DCC8':'#FFB020'}">${IC.shooter}</div><div><div class="sh-title">${mine?(tr.kind==='scout'?'Your scout':'Your crew'):OWN[tr.crew]}</div><div class="owner">Heading to ${short(nm(tr.target))}</div></div></div>
@@ -1188,7 +1228,7 @@ const eta=m=>{const s=Math.round(m*60);return `${Math.floor(s/60)}:${String(s%60
 // ---------- building sheet ----------
 function openRaw(h){$('#sheet').innerHTML='<div class="handle"></div>'+h;$('#sheet').classList.add('on');$('#scrim').classList.add('on')}
 function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');sel=null;markRange();map&&map.paint()}
-function openSheet(id){const b=S.buildings[id],m=B[id];if(m.landmark)return;sel=id;markRange();vib(10);if(id===tutorialHouse())SD.flag('tapped');
+function openSheet(id){const b=S.buildings[id],m=B[id];if(m.landmark)return;window.__lastSheet=id;sel=id;markRange();vib(10);if(id===tutorialHouse())SD.flag('tapped');
  const own=b.owner,col=FAM[own]||'#8A7F78',pr=SD_PROPS[m.type],intel=SD.intelOf(S,id);
  const inc=SD.incomeOf(S,id).label,sc$=SD.scoutCost(S,'player');
  let body='';
@@ -1406,8 +1446,8 @@ function go(h){location.hash='#'+h}
 function route(){const [r,arg]=(location.hash.slice(1)||'map').split('?')[0].split('/');if(!SD.hasSave()&&r!=='title'&&r!=='onboard'){location.replace('#title');return route()}$('#menu').classList.remove('on');closeModal();if($('#sheet').classList.contains('on'))closeSheet();
  const tab=TABS.includes(r)?r:null;
  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id==='screen-'+(tab||'map')));
- const wasRep=$('#report').classList.contains('on');FULL.forEach(f=>$('#'+f).classList.toggle('on',f===r));if(r==='report'||r==='war')$('.toasts').replaceChildren();if(r==='crew')$('.toasts').replaceChildren();if(!holdToasts()&&toastQ.length)flushToasts();
- const full=FULL.includes(r);['#top','#dock','#objective'].forEach(q=>$(q).style.display=full?'none':'');
+ const wasRep=$('#report').classList.contains('on');FULL.forEach(f=>{const e=$('#'+f);e.classList.toggle('on',f===r);e.inert=f!==r});if(r==='report'||r==='war')$('.toasts').replaceChildren();if(r==='crew')$('.toasts').replaceChildren();if(!holdToasts()&&toastQ.length)flushToasts();
+ const full=FULL.includes(r);if(!full&&!$('#sheet').classList.contains('on'))document.querySelectorAll('.scrim.on').forEach(e=>e.classList.remove('on'));['#top','#dock','#objective'].forEach(q=>$(q).style.display=full?'none':'');
  $('#alertbar').style.display=full||!inbound()?'none':'';P.classList.toggle('alerting',!full&&!!inbound());$('#chips').style.display=full||tab!=='map'?'none':'';$('#objective').style.display=full||(tab!=='map')?'none':'';
  paintDock(tab||'map');
  if(r==='crew')crew();if(r==='holdings')holdings();if(r==='market')market();if(r==='wire')wire();
@@ -1445,7 +1485,7 @@ SD.onTick=structural=>{scarTick();if(document.hidden){hiddenDirty=hiddenDirty||s
  if(r==='map'||r==='sheet'||r==='trip'||r===''){if(structural)drawDynamic(true);else if(S.trips.length)drawDynamic()}
  if(structural){if(r==='holdings')holdings();if(r==='wire')wire();if(r==='crew')crew()}};
 window.addEventListener('hashchange',route);route();
-window.SDUI={go,openSheet,selectUnit:id=>{selUnit=id;markRange()},toast,away,get map(){return map}};
+window.SDUI={go,openSheet,selectUnit:id=>{selUnit=id;markRange();layoutDiscs()},toast,away,get map(){return map}};
 })();
 </script><script>/* v5 portraits: 12 fictional noir mugshots (ink & grain, cream on charcoal). Inlined so the single-file build carries them.
    SDPortrait(id) -> data URL, deterministic by unit id. Sources: assets/portraits/p01..p12.jpg */
