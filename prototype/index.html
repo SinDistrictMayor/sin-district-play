@@ -720,6 +720,16 @@ input[type=range]{accent-color:var(--cream)}
 @keyframes hit-press{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1);opacity:0}}
 .lot-hit .pin-label{pointer-events:none}
 #map svg.city,.f-baked,#map .ground{pointer-events:none!important}
+/* v5.8.1 move-confirm strip + threat sheet (coder placeholders → kit) */
+.objective.move-confirm{border-left-color:var(--brass);gap:8px}
+.objective.move-confirm .txt{flex:1;font:600 14px var(--font-body);color:var(--cream)}
+.objective.move-confirm .txt small{display:block;font:500 12px var(--font-body);color:var(--ash);margin-top:2px}
+.objective.move-confirm .go-move{appearance:none;border:0;background:var(--brass);color:#0B0E12;font:700 13px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;padding:10px 14px;border-radius:2px}
+.objective.move-confirm .go-x{appearance:none;border:0;background:transparent;color:var(--ash);font:700 18px/1 var(--font-ui);padding:8px;min-width:36px}
+.threat-sheet{border-top:3px solid #FFB020}
+.threat-sheet .eta{font:800 28px var(--font-ui);color:#FFB020;letter-spacing:.04em}
+.threat-sheet .who{color:#C8323C;font-weight:700}
+.lot-hit.npc .pin-label,.lot-hit.npc > span{opacity:.4}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -782,6 +792,9 @@ window.COPY={
 };
 // ---- v4 additions (Graphic & UI) ----
 Object.assign(window.COPY,{
+ moveConfirm:(u,lot,price)=>`Move ${u} → ${lot}`,
+ moveConfirmBuy:price=>`buy $${price}`,
+ threatIncoming:(who,lot)=>`${who} inbound on ${lot}`,
  threatShooters:lot=>`Word is the Shooters want ${lot}. Soon, and they won't knock.`,
  tutVest:{title:'Dress for it',body:'Buy a vest and put it on. Pistols you already have.'},
  tutGuard:{title:'Lock the door',body:"Put a guard on your home. The shield won't last."},
@@ -1183,7 +1196,7 @@ function moveConfirm(uid,id){const u=S.units.find(x=>x.id===uid);if(!u)return op
  moveQ={uid,id};window.__lastMove=id;window.__lastSheet=null;vib(10);paintMoveStrip()}
 function paintMoveStrip(){const o=$('#objective'),q=moveQ;if(!q)return false;const u=S.units.find(x=>x.id===q.uid),pr=SD_PROPS[B[q.id].type],need=pr.cost-S.crews.player.cash,busy=!u||u.at==='trip';
  o.style.display='';o.className='objective move-confirm';o.dataset.move=q.id;
- o.innerHTML=`<span class="txt">Move ${u?u.name:'crew'} → ${short(nm(q.id))} · buy <span class="num money">${money(pr.cost)}</span></span><button class="btn primary gold" id="mvok" ${need>0||busy?'disabled':''}>Move</button><button class="btn ghost" id="mvx" aria-label="Cancel">✕</button>`;
+ const mvN=u?u.name:'crew',mvL=short(nm(q.id));o.innerHTML=`<span class="txt">${C.moveConfirm?C.moveConfirm(mvN,mvL):`Move ${mvN} → ${mvL}`}<small>${C.moveConfirmBuy?C.moveConfirmBuy(pr.cost):'buy '+money(pr.cost)}</small></span><button class="go-move" id="mvok" ${need>0||busy?'disabled':''}>Move</button><button class="go-x" id="mvx" aria-label="Cancel">✕</button>`;
  $('#mvok').onclick=e=>{e.stopPropagation();const r=SD.buy(S,'player',q.id);if(res(r,`${u.name} moves into ${short(nm(q.id))}.`)){if(u.at==='pool')u.at=q.id;sfx('buy');moveQ=null;selUnit=null;markRange();drawDynamic(true);layoutDiscs();paintObjective()}};
  $('#mvx').onclick=e=>{e.stopPropagation();moveQ=null;paintObjective()};return true}
 /* Incoming (GD gap 2): threatened lot opens the defense view: live arrival timer, guards inside, shield, HELD path (Add guards / Show me). */
@@ -1191,11 +1204,11 @@ let threatTick=0;
 function threatSheet(id){const tr=S.trips.find(t=>t.crew!=='player'&&t.kind==='raid'&&t.target===id);if(!tr)return openSheet(id);
  window.__lastSheet='threat:'+id;sel=id;markRange();vib(20);const b=S.buildings[id];
  const draw=()=>{const t=S.trips.find(x=>x.id===tr.id),g=SD.garrison(S,id).length,sh=SD.shieldLeft(S);
-  openRaw(`<div class="sh-head threat" data-threat="${id}"><div class="tglyph" style="color:#FFB020">${IC.shooter}</div><div style="min-width:0"><div class="sh-title">${short(nm(id))}</div><div class="owner" style="color:#FFB020"><i></i>INCOMING · ${OWN[tr.crew]}</div></div></div>
-  <div class="ledger"><div><span>They hit in</span><span class="num threat-timer" id="thT">${t?eta(t.etaMin):'now'}</span></div><div><span>Coming</span><span>${tr.units.length}, maybe more</span></div>
+  openRaw(`<div class="threat-sheet"><div class="sh-head threat" data-threat="${id}"><div class="tglyph" style="color:#FFB020">${IC.shooter}</div><div style="min-width:0"><div class="sh-title">${short(nm(id))}</div><div class="owner" style="color:#FFB020"><i></i>INCOMING · <span class="who">${OWN[tr.crew]}</span></div></div></div>
+  <div class="ledger"><div><span>They hit in</span><span class="num threat-timer eta" id="thT">${t?eta(t.etaMin):'now'}</span></div><div><span>Coming</span><span>${tr.units.length}, maybe more</span></div>
   <div><span>Guards inside</span><span>${g?g:'<span style="color:var(--cream)">'+C.noGuards+'</span>'}</span></div>${b.owner==='player'&&sh>0?`<div><span>Shield</span><span class="num">${Math.ceil(sh/60)}h left</span></div>`:''}
   <div><span>To hold</span><span>${g?'Keep them inside → HELD':'Post guards before the timer runs out'}</span></div></div>
-  <div class="row2"><button class="btn ghost" id="thLot">Lot details</button><button class="btn primary" id="thG" ${b.owner!=='player'?'disabled':''}>Add guards</button></div>`);
+  <div class="row2"><button class="btn ghost" id="thLot">Lot details</button><button class="btn primary" id="thG" ${b.owner!=='player'?'disabled':''}>Add guards</button></div></div>`);
   $('#thG').onclick=()=>{if(res(SD.station(S,'player',id,1),'Guard posted.'))draw()};$('#thLot').onclick=()=>{clearInterval(threatTick);openSheet(id)}};
  draw();clearInterval(threatTick);threatTick=setInterval(()=>{const el=$('#thT'),t=S.trips.find(x=>x.id===tr.id);if(!el||!$('#sheet').classList.contains('on')){clearInterval(threatTick);return}el.textContent=t?eta(t.etaMin):'now'},500)}
 {let dn=null;document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.lot-hit');dn=h&&e.isPrimary?{h,x:e.clientX,y:e.clientY,id:e.pointerId}:null;if(h)h.classList.add('press')},true);
