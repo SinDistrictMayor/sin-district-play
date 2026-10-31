@@ -1068,7 +1068,7 @@ function initMap(){
  const mo={state:S,center:[home[0]-60,home[1]+120],scale:.42,onTap:openSheet};map=fastMap(SDMap($('#map'),mo));mo.onTap=null;/* land discs own taps */
  drawDynamic();
  /* load gate (Basemap v1): map stays dark and Continue stays dead until the bake is decoded and the first plate has painted */
- P.classList.remove('map-ready');const mel=$('#map');mel.classList.add('map-loading');const mm=map;Promise.all([map.ready,map.plateReady]).then(()=>{if(map!==mm)return;mel.classList.remove('map-loading');P.classList.add('map-ready')});
+ P.classList.remove('map-ready');const mel=$('#map');mel.classList.add('map-loading');const mm=map;Promise.all([map.ready,map.plateReady]).then(()=>{if(map!==mm)return;mel.classList.remove('map-loading');P.classList.add('map-ready');requestAnimationFrame(()=>requestAnimationFrame(()=>{if(map!==mm)return;mm.swapPlate&&mm.swapPlate();mm.loadSnow&&mm.loadSnow()}))});
 }
 {const st=document.createElement('style');st.textContent=`#map.map-loading>svg,#map.map-loading>.pins{opacity:0}#map>svg,#map>.pins{transition:opacity .3s}
 #phone:not(.map-ready) [data-go="map"]{pointer-events:none;opacity:.45}
@@ -1183,8 +1183,9 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
    When a plate is decoded, svg.has-plate hides the SVG ground (lake/roads/blocks/filler bake); buildings, halos, turf, routes stay live on top.
    Missing plate -> no has-plate -> the old SVG bake is the fallback. */
  const PO={x:-1604,y:-2271,w:3378,h:4537},DPR=window.devicePixelRatio||1;
+ const mapReady=()=>!!document.getElementById('phone')?.classList.contains('map-ready');
  const PV={city:{night:'city-night',day:'city-day','snow-night':'city-snow-night','snow-day':'city-snow-day'},street:{day:'street-day',night:'street-night','snow-night':'street-snow-night','snow-day':'street-snow-day'}};
- const plateKey=()=>{const z=P<.6?'city':'street',ph=document.getElementById('phone')||document.body,day=ph.classList.contains('day')||document.body.classList.contains('day'),sn=P0snow();
+ const plateKey=()=>{const z=P<.6?'city':'street',ph=document.getElementById('phone')||document.body,day=ph.classList.contains('day')||document.body.classList.contains('day'),sn=P0snow()&&mapReady();
   const want=(sn?'snow-':'')+(day?'day':'night'),t=PV[z];const f=t[want]||t[day?'day':'night']||Object.values(t)[0];
   return f+((z==='city'?DPR>=1.5:DPR>=2.5)?'@3x':'')+'.jpg'};
  const pbase=(window.SD_PLATE_BASE||'plates/'),pcache={};
@@ -1200,10 +1201,11 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  plate(plateFor(v.s));
  /* preload order (cold start): gate = clear city plate for current day/night only; clear street (same day/night) after city; snow x4 after first idle frame */
  const sxz=z=>(z==='city'?DPR>=1.5:DPR>=2.5)?'@3x':'',clearKey=z=>PV[z][P0day()?'day':'night']+sxz(z)+'.jpg';
- let snowGo=0;const loadSnow=()=>{if(snowGo||gest||pts.size)return;snowGo=1;m.snowLoad=Object.entries(PV).flatMap(([z,t])=>Object.keys(t).filter(k=>k.startsWith('snow')).map(k=>t[k]+sxz(z)+'.jpg'));Promise.all(m.snowLoad.map(pload))};
+ /* snow: never before map-ready; after map-ready + idle frame preload 1x only; @3x only fetched by swapPlate when weather is actually snow */
+ let snowGo=0;const loadSnow=()=>{if(snowGo||gest||pts.size||!mapReady())return;snowGo=1;m.snowLoad=Object.entries(PV).flatMap(([z,t])=>Object.keys(t).filter(k=>k.startsWith('snow')).map(k=>t[k]+'.jpg'));Promise.all(m.snowLoad.map(pload))};
  const ck=clearKey('city'),sp=swapPlate();m.gateWait=[ck];
  m.plateReady=pload(ck).then(()=>pkey===ck?sp:null);
- m.plateReady.then(()=>{pload(clearKey('street'));requestAnimationFrame(()=>requestAnimationFrame(loadSnow))});
+ m.plateReady.then(()=>{pload(clearKey('street'))});m.loadSnow=loadSnow;
  m.commit=commit;m.settleNow=idle;window.SDUI_map=m;/* test handle */return m}
 let dynSig='',dynTrips=[];
 /* Tap-the-land (round 4): every citizen lot gets an invisible .lot-hit disc (kit CSS, 44px / 48px target+incoming) in the pin layer,
