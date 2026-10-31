@@ -736,7 +736,9 @@ input[type=range]{accent-color:var(--cream)}
 .bld.b-player{stroke:var(--cream)!important;stroke-opacity:.95}.bld.b-earner{stroke:#6F8A4E!important;stroke-opacity:.95}
 .bld.b-shooter{stroke:#C8323C!important;stroke-opacity:.95}.bld.b-politician{stroke:#6A4C7A!important;stroke-opacity:.95}
 .bld.b-npc{stroke:#8A7F78!important;stroke-opacity:.7}
-</style></head><body>
+.bld.b-free{fill-opacity:0!important;stroke:#8A7F78;stroke-opacity:.45}
+
+/* plate owns ALL roofs (incl. free lots): fill 0, stroke only */svg.has-plate .bld,svg.has-plate .bld.reachable,svg.has-plate .b-free,.day svg.has-plate .b-free{fill-opacity:0!important}</style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
   <button class="fab" style="bottom:196px" aria-label="Recentre" onclick="SDUI.go('map')"></button><button class="fab" style="bottom:140px" aria-label="Layers"></button>
@@ -1151,7 +1153,7 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  let gest=0,timer=0,dirty=false;
  /* game-state repaint (classes, v5 pins, influence) — never during a gesture; kit paint's own g/pin transforms are overwritten in plate space */
  const commit=()=>{if(gest||pts.size){dirty=true;return}dirty=false;clamp();orig();if(g)g.setAttribute('transform',`scale(${P}) translate(${-X0} ${-Y0})`);placePins();place();edges();cz();markRange();layoutDiscs();m.onSettle&&m.onSettle()};
- const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place();m.swapPlate&&m.swapPlate()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle()};
+ const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place();m.swapPlate&&m.swapPlate()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle();if(window.SDUI_map)setTimeout(loadSnow,0)};
  const settle=(ms=300)=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return settle(ms);idle()},ms)};
  m.paint=()=>{if(gest||pts.size){place();return}commit()};
  const size=()=>{W=el.clientWidth;H=el.clientHeight};
@@ -1196,7 +1198,12 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
    const nx=pimg[1-pcur],cu=pimg[pcur];nx.setAttribute('href',u);pg.appendChild(nx);requestAnimationFrame(()=>{nx.setAttribute('opacity',1);nx.style.opacity=1;svg.classList.add('has-plate');setTimeout(()=>{cu.style.opacity=0;cu.setAttribute('opacity',0)},320)});pcur=1-pcur;m.plateKey=k})};
  m.swapPlate=()=>{if(gest||pts.size){rebakeQ=true;return}swapPlate()};
  plate(plateFor(v.s));
- m.plateReady=swapPlate().then(()=>m.preloadPlates());
+ /* preload order (cold start): gate = clear city plate for current day/night only; clear street (same day/night) after city; snow x4 after first idle frame */
+ const sxz=z=>(z==='city'?DPR>=1.5:DPR>=2.5)?'@3x':'',clearKey=z=>PV[z][P0day()?'day':'night']+sxz(z)+'.jpg';
+ let snowGo=0;const loadSnow=()=>{if(snowGo||gest||pts.size)return;snowGo=1;m.snowLoad=Object.entries(PV).flatMap(([z,t])=>Object.keys(t).filter(k=>k.startsWith('snow')).map(k=>t[k]+sxz(z)+'.jpg'));Promise.all(m.snowLoad.map(pload))};
+ const ck=clearKey('city'),sp=swapPlate();m.gateWait=[ck];
+ m.plateReady=pload(ck).then(()=>pkey===ck?sp:null);
+ m.plateReady.then(()=>{pload(clearKey('street'));requestAnimationFrame(()=>requestAnimationFrame(loadSnow))});
  m.commit=commit;m.settleNow=idle;window.SDUI_map=m;/* test handle */return m}
 let dynSig='',dynTrips=[];
 /* Tap-the-land (round 4): every citizen lot gets an invisible .lot-hit disc (kit CSS, 44px / 48px target+incoming) in the pin layer,
