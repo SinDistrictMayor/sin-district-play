@@ -730,6 +730,7 @@ input[type=range]{accent-color:var(--cream)}
 .threat-sheet .eta{font:800 28px var(--font-ui);color:#FFB020;letter-spacing:.04em}
 .threat-sheet .who{color:#C8323C;font-weight:700}
 .lot-hit.npc .pin-label,.lot-hit.npc > span{opacity:.4}
+.lot-hit.scouted-flash::after{border-color:rgba(232,220,200,.55);opacity:1;animation:hit-press .3s ease-out forwards}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -1060,13 +1061,14 @@ function initMap(){
  const mo={state:S,center:[home[0]-60,home[1]+120],scale:.42,onTap:openSheet};map=fastMap(SDMap($('#map'),mo));mo.onTap=null;/* land discs own taps */
  drawDynamic();
  /* load gate (Basemap v1): map stays dark and Continue stays dead until the bake is decoded and the first plate has painted */
- P.classList.remove('map-ready');const mel=$('#map');mel.classList.add('map-loading');const mm=map;map.ready.then(()=>{if(map!==mm)return;mel.classList.remove('map-loading');P.classList.add('map-ready')});
+ P.classList.remove('map-ready');const mel=$('#map');mel.classList.add('map-loading');const mm=map;Promise.all([map.ready,map.plateReady]).then(()=>{if(map!==mm)return;mel.classList.remove('map-loading');P.classList.add('map-ready')});
 }
 {const st=document.createElement('style');st.textContent=`#map.map-loading>svg,#map.map-loading>.pins{opacity:0}#map>svg,#map>.pins{transition:opacity .3s}
 #phone:not(.map-ready) [data-go="map"]{pointer-events:none;opacity:.45}
 .city-zoom .pin.quiet:not(.inrange){display:none}
 .full:not(.on){pointer-events:none!important}.full:not(.on) *{pointer-events:none!important}
 #map svg.city,#map svg.city *{pointer-events:none!important}
+#map svg.city.has-plate :is(.lake,.lake-shim,.shore,.block,.r-glow,.r-bed,.r-case,.f-baked,.f-shadow,.f-side){display:none}
 #map .pin:not(.edge){pointer-events:none}
 #phone:has(.full.on) .lot-hit{pointer-events:none!important}`;document.head.appendChild(st)}
 // rival turf tint: path.turf-block.<crew> (kit CSS: strong wash under .street-zoom, fades under .city-zoom)
@@ -1097,6 +1099,7 @@ function markInfluence(o){if(!map||!map.blds)return;const now=performance.now();
 let scarSig='';function scarTick(){const now=performance.now();const sig=scarsNow().map(x=>x.bid+x.kind).join()+'|'+Object.keys(stampUntil).filter(k=>stampUntil[k]>now).join();if(sig!==scarSig){scarSig=sig;markRange()}}
 function stampBid(b){stampUntil[b]=performance.now()+1000;scarTick();setTimeout(scarTick,1050)}
 if(SD.onReport)SD.onReport(r=>{if(r&&r.building!=null)stampBid(r.building)});/* every report adds a scar (raid, held or lost) */
+if(SD.scout){const _sc=SD.scout;SD.scout=(st,crew,id,...r)=>{const v=_sc(st,crew,id,...r);if(crew==='player'&&SD.isScouted(st,id)){const fl=()=>{const e=document.querySelector(`.lot-hit[data-bid="${id}"]`);if(!e)return;e.classList.remove('scouted-flash');void e.offsetWidth;e.classList.add('scouted-flash');setTimeout(()=>e.classList.remove('scouted-flash'),300)};setTimeout(fl,180)}return v}}
 if(SD.addScar){const _as=SD.addScar;SD.addScar=(b,k)=>{const v=_as(b,k);stampBid(b);return v}}
 function markRange(){if(!map)return;const o=rangeOrigin();markInfluence(o);
  map.pins.querySelectorAll('.pin.o-free:not(.quiet):not(.target):not(.incoming):not(.home)').forEach(e=>e.classList.add('quiet'));
@@ -1143,7 +1146,7 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  let gest=0,timer=0,dirty=false;
  /* game-state repaint (classes, v5 pins, influence) — never during a gesture; kit paint's own g/pin transforms are overwritten in plate space */
  const commit=()=>{if(gest||pts.size){dirty=true;return}dirty=false;clamp();orig();if(g)g.setAttribute('transform',`scale(${P}) translate(${-X0} ${-Y0})`);placePins();place();edges();cz();markRange();layoutDiscs();m.onSettle&&m.onSettle()};
- const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle()};
+ const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place();m.swapPlate&&m.swapPlate()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle()};
  const settle=(ms=300)=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return settle(ms);idle()},ms)};
  m.paint=()=>{if(gest||pts.size){place();return}commit()};
  const size=()=>{W=el.clientWidth;H=el.clientHeight};
@@ -1161,13 +1164,34 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  m.pinchTest=(cx,cy,f)=>{const s0=v.s,w=(cx-W/2)/v.s+v.x;v.s=Math.min(S1,Math.max(.15,v.s*f));v.x=w-(cx-W/2)/v.s;gest=1;place();settle(120);return[s0,v.s]};
  /* snow/day re-bake of the filler image: only when idle (never mid-pan); kit bake -> SDBakeWorker (off-thread) */
  let snowWas=P0snow(),rebakeQ=false;function P0snow(){return document.getElementById('phone')?.classList.contains('map-snow')||!!document.querySelector('.map-snow')}
- const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake==='function')m.rebake()};
+ const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake==='function')m.rebake();m.swapPlate&&m.swapPlate()};
  m.onSettle=()=>{if(rebakeQ)setTimeout(rebake,0)};
  m.weather=()=>{const sn=P0snow();if(sn!==snowWas){snowWas=sn;rebake()}};
  /* load gate: resolves once the baked filler bitmap is decoded and the first plate has painted */
  m.ready=new Promise(res=>{const img=svg&&svg.querySelector('image.f-baked');let n=0;const chk=()=>{const h=img&&img.getAttribute('href');
   if(img&&!h&&n++<200)return setTimeout(chk,25);const done=()=>requestAnimationFrame(()=>requestAnimationFrame(res));if(!h)return done();const im=new Image();im.src=h;(im.decode?im.decode():Promise.resolve()).catch(()=>{}).then(done)};chk()});
+ /* Basemap plates (designer, ui/plates, locked origin X0=-1604 Y0=-2271 X1=1774 Y1=2266 m): photo GROUND under the live SVG.
+   Two <image>s in world space inside the same <g> (rides the one GPU transform); A/B for a 300ms idle-only crossfade.
+   Selection: plate level 0.3 -> city-night, >=0.6 -> street-day (only variants that exist; table falls back by zoom, then any).
+   When a plate is decoded, svg.has-plate hides the SVG ground (lake/roads/blocks/filler bake); buildings, halos, turf, routes stay live on top.
+   Missing plate -> no has-plate -> the old SVG bake is the fallback. */
+ const PO={x:-1604,y:-2271,w:3378,h:4537},DPR=window.devicePixelRatio||1;
+ const PV={city:{night:'city-night'},street:{day:'street-day'}};/* add 'day','snow-night','snow-day' here as the designer ships them */
+ const plateKey=()=>{const z=P<.6?'city':'street',ph=document.getElementById('phone')||document.body,day=ph.classList.contains('day')||document.body.classList.contains('day'),sn=P0snow();
+  const want=(sn?'snow-':'')+(day?'day':'night'),t=PV[z];const f=t[want]||t[day?'day':'night']||Object.values(t)[0];
+  return f+((z==='city'?DPR>=1.5:DPR>=2.5)?'@3x':'')+'.jpg'};
+ const pbase=(window.SD_PLATE_BASE||'plates/'),pcache={};
+ const pload=f=>pcache[f]||(pcache[f]=new Promise(r=>{const im=new Image();im.src=pbase+f;(im.decode?im.decode():new Promise((a,b)=>{im.onload=a;im.onerror=b})).then(()=>r(im.src),()=>r(null))}));
+ m.preloadPlates=()=>Promise.all(['city','street'].map(z=>{const sv=P;P=z==='city'?.3:.6;const k=plateKey();P=sv;return pload(k)}));
+ const NS='http://www.w3.org/2000/svg',pg=g&&document.createElementNS(NS,'g');let pimg=[],pcur=0,pkey='';
+ if(pg){pg.setAttribute('class','plate-ground');g.insertBefore(pg,g.firstChild);for(let i=0;i<2;i++){const e=document.createElementNS(NS,'image');
+  for(const[k,val]of Object.entries({x:PO.x,y:PO.y,width:PO.w,height:PO.h,preserveAspectRatio:'none',opacity:0}))e.setAttribute(k,val);e.style.transition='opacity .3s';pg.appendChild(e);pimg.push(e)}}
+ const swapPlate=()=>{if(!pg)return Promise.resolve();const k=plateKey();if(k===pkey)return Promise.resolve();pkey=k;
+  return pload(k).then(u=>{if(k!==pkey)return;if(!u){if(!svg.classList.contains('has-plate'))return;return}
+   const nx=pimg[1-pcur],cu=pimg[pcur];nx.setAttribute('href',u);pg.appendChild(nx);requestAnimationFrame(()=>{nx.setAttribute('opacity',1);nx.style.opacity=1;svg.classList.add('has-plate');setTimeout(()=>{cu.style.opacity=0;cu.setAttribute('opacity',0)},320)});pcur=1-pcur;m.plateKey=k})};
+ m.swapPlate=()=>{if(gest||pts.size){rebakeQ=true;return}swapPlate()};
  plate(plateFor(v.s));
+ m.plateReady=swapPlate().then(()=>m.preloadPlates());
  m.commit=commit;m.settleNow=idle;window.SDUI_map=m;/* test handle */return m}
 let dynSig='',dynTrips=[];
 /* Tap-the-land (round 4): every citizen lot gets an invisible .lot-hit disc (kit CSS, 44px / 48px target+incoming) in the pin layer,
