@@ -647,7 +647,7 @@ input[type=range]{accent-color:var(--cream)}
 /* v5.2 teardown visuals */
 .pin.target{animation:tgt 1.6s ease-in-out infinite}.pin.quiet{opacity:.35}
 @keyframes tgt{0%,100%{box-shadow:0 0 0 0 rgba(236,228,210,.7)}50%{box-shadow:0 0 0 14px rgba(236,228,210,0)}}
-.shield-warn{position:absolute;left:0;right:0;top:var(--topbar-h,96px);z-index:60;background:rgba(214,140,40,.14);border-bottom:1px solid #d68c28;color:#e8b060;font:600 14px Barlow,sans-serif;padding:8px 14px}
+.shield-warn{position:absolute;left:0;right:0;top:var(--topbar-h,96px);z-index:60;background:rgba(214,140,40,.14);border-bottom:1px solid var(--danger,#FFB020);color:#e8b060;font:600 14px Barlow,sans-serif;padding:8px 14px}
 .rival-card{border-left:4px solid var(--crew,var(--ash))}.rival-card.earner{--crew:#6F8A4E}.rival-card.shooter{--crew:#C8323C}.rival-card.politician{--crew:#6A4C7A}
 .cash.tick{animation:tick .5s ease-out}@keyframes tick{0%{color:var(--brass);transform:translateY(-2px)}100%{color:inherit;transform:none}}
 .pact-sheet{border-top:4px solid #6A4C7A;background:var(--ink);padding:20px}.pact-sheet .seal{width:56px;height:56px;border-radius:50%;background:#6A4C7A;box-shadow:inset 0 0 0 3px rgba(0,0,0,.3)}
@@ -678,7 +678,7 @@ input[type=range]{accent-color:var(--cream)}
 .goal-strip .hold-t{font:600 13px var(--font-ui,Barlow);color:var(--ash);margin-left:6px;font-variant-numeric:tabular-nums}
 .goal-strip .hold.broken i{background:var(--ash)}
 .shield-warn{top:calc(var(--topbar-h,96px) + var(--district-h,28px))}
-.wire-item.threat{border-left:3px solid #d68c28;background:rgba(214,140,40,.08)}.wire-item.threat .from{color:#C8323C;font-weight:700}.wire-item.threat .when{color:#e8b060}
+.wire-item.threat{border-left:3px solid var(--danger,#FFB020);background:rgba(214,140,40,.08)}.wire-item.threat .from{color:#C8323C;font-weight:700}.wire-item.threat .when{color:#e8b060}
 .sd-dial.unk .ndl{opacity:.25;animation:none}
 /* v5.6 PERF: drop GPU-heavy filters and full-screen animations on the map */
 .b-player,.o-player .pv,.o-player.home .pv,.o-rival .pv,.ghost-route,.chev svg{filter:none!important}
@@ -705,12 +705,16 @@ input[type=range]{accent-color:var(--cream)}
 .street-zoom .turf-block.player:not(.foothold),.turf-block.street.player{fill:var(--cream)!important;fill-opacity:.18!important}
 /* fight scars — timed overlays on the lot (game hours from GD) */
 .lot-scar{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;left:0;top:0;pointer-events:none;z-index:6;border-radius:50%}
-.lot-scar.raid{box-shadow:0 0 0 3px #d68c28,0 0 18px #d68c2888;background:radial-gradient(circle,#d68c2833,transparent 70%);animation:scar-in .35s ease-out}
+
 .lot-scar.held{box-shadow:0 0 0 3px var(--cream),0 0 16px #E8DCC866;border:2px solid var(--cream);background:transparent;animation:scar-in .35s ease-out}
 .lot-scar.lost{box-shadow:none;border:2px dashed var(--ash);border-radius:8px;width:48px;height:48px;margin:-24px 0 0 -24px;animation:scar-in .35s ease-out}
 .lot-scar.fade{opacity:0;transition:opacity 1.2s}
 @keyframes scar-in{from{opacity:0;filter:blur(4px)}to{opacity:1;filter:none}}
 
+/* v5.7.1 1s cream stamp on fight resolve, then lasting scar */
+.bld.scar-stamp{animation:scar-stamp 1s ease-out forwards;stroke:var(--cream)!important;stroke-width:3;stroke-opacity:1;fill:var(--cream)!important;fill-opacity:.35!important}
+@keyframes scar-stamp{0%{filter:drop-shadow(0 0 0 #E8DCC8);stroke-width:8}40%{filter:drop-shadow(0 0 14px #E8DCC8cc);stroke-width:3}100%{filter:none;fill-opacity:inherit;stroke-opacity:.9}}
+.lot-scar.raid{box-shadow:0 0 0 3px #FFB020,0 0 18px #FFB02088;background:radial-gradient(circle,#FFB02033,transparent 70%);animation:scar-in .35s ease-out}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -1063,7 +1067,9 @@ function markInfluence(o){if(!map||!map.blds)return;const now=performance.now();
  for(const x of scarsNow()){const k=x.bid+':'+x.kind;live.add(k);if(H[k]&&H[k].el.isConnected)continue;if(B[x.bid]&&SDMap.scar){H[k]=SDMap.scar(map,B[x.bid].c[0],B[x.bid].c[1],x.kind);H[k].el.dataset.bid=x.bid}}
  for(const k in H)if(!live.has(k)){H[k].clear();delete H[k]}}
 let scarSig='';function scarTick(){const now=performance.now();const sig=scarsNow().map(x=>x.bid+x.kind).join()+'|'+Object.keys(stampUntil).filter(k=>stampUntil[k]>now).join();if(sig!==scarSig){scarSig=sig;markRange()}}
-if(SD.onReport)SD.onReport(r=>{if(r.stamp==='TAKEN'&&r.playerSide==='attacker'||r.playerSide==='defender'&&r.stamp!=='TAKEN'){stampUntil[r.building]=performance.now()+1000;setTimeout(scarTick,1050)}});
+function stampBid(b){stampUntil[b]=performance.now()+1000;scarTick();setTimeout(scarTick,1050)}
+if(SD.onReport)SD.onReport(r=>{if(r&&r.building!=null)stampBid(r.building)});/* every report adds a scar (raid, held or lost) */
+if(SD.addScar){const _as=SD.addScar;SD.addScar=(b,k)=>{const v=_as(b,k);stampBid(b);return v}}
 function markRange(){if(!map)return;const o=rangeOrigin();markInfluence(o);
  map.pins.querySelectorAll('.pin.o-free:not(.quiet):not(.target):not(.incoming):not(.home)').forEach(e=>e.classList.add('quiet'));
  map.pins.querySelectorAll('.pin.quiet').forEach(e=>{const x=+e.dataset.x,y=+e.dataset.y;e.classList.toggle('inrange',!!(o&&Math.hypot(x-o[0],y-o[1])<=INRANGE_M))})}
