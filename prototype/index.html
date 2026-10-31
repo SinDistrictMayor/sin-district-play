@@ -731,6 +731,11 @@ input[type=range]{accent-color:var(--cream)}
 .threat-sheet .who{color:#C8323C;font-weight:700}
 .lot-hit.npc .pin-label,.lot-hit.npc > span{opacity:.4}
 .lot-hit.scouted-flash::after{border-color:rgba(232,220,200,.55);opacity:1;animation:hit-press .3s ease-out forwards}
+/* Plate + ink: ownership wash sits on the photo, not over it */
+.bld.b-player,.bld.b-earner,.bld.b-shooter,.bld.b-politician,.bld.b-npc{fill-opacity:0!important}
+.bld.b-player{stroke:var(--cream)!important;stroke-opacity:.95}.bld.b-earner{stroke:#6F8A4E!important;stroke-opacity:.95}
+.bld.b-shooter{stroke:#C8323C!important;stroke-opacity:.95}.bld.b-politician{stroke:#6A4C7A!important;stroke-opacity:.95}
+.bld.b-npc{stroke:#8A7F78!important;stroke-opacity:.7}
 </style></head><body>
 <div class="phone velvet" id="phone">
  <section class="screen on" id="screen-map"><div id="map"></div><div class="fog"></div><div class="wx" id="wx"></div><div class="sodium"></div>
@@ -1163,26 +1168,26 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);
  m.pinchTest=(cx,cy,f)=>{const s0=v.s,w=(cx-W/2)/v.s+v.x;v.s=Math.min(S1,Math.max(.15,v.s*f));v.x=w-(cx-W/2)/v.s;gest=1;place();settle(120);return[s0,v.s]};
  /* snow/day re-bake of the filler image: only when idle (never mid-pan); kit bake -> SDBakeWorker (off-thread) */
- let snowWas=P0snow(),rebakeQ=false;function P0snow(){return document.getElementById('phone')?.classList.contains('map-snow')||!!document.querySelector('.map-snow')}
+ let snowWas=P0snow(),dayWas=P0day(),rebakeQ=false;function P0day(){return !!(document.getElementById('phone')?.classList.contains('day')||document.body.classList.contains('day'))}function P0snow(){return document.getElementById('phone')?.classList.contains('map-snow')||!!document.querySelector('.map-snow')}
  const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake==='function')m.rebake();m.swapPlate&&m.swapPlate()};
  m.onSettle=()=>{if(rebakeQ)setTimeout(rebake,0)};
- m.weather=()=>{const sn=P0snow();if(sn!==snowWas){snowWas=sn;rebake()}};
+ m.weather=()=>{const sn=P0snow(),dy=P0day();if(sn!==snowWas){snowWas=sn;dayWas=dy;rebake()}else if(dy!==dayWas){dayWas=dy;m.swapPlate()}};
  /* load gate: resolves once the baked filler bitmap is decoded and the first plate has painted */
  m.ready=new Promise(res=>{const img=svg&&svg.querySelector('image.f-baked');let n=0;const chk=()=>{const h=img&&img.getAttribute('href');
   if(img&&!h&&n++<200)return setTimeout(chk,25);const done=()=>requestAnimationFrame(()=>requestAnimationFrame(res));if(!h)return done();const im=new Image();im.src=h;(im.decode?im.decode():Promise.resolve()).catch(()=>{}).then(done)};chk()});
  /* Basemap plates (designer, ui/plates, locked origin X0=-1604 Y0=-2271 X1=1774 Y1=2266 m): photo GROUND under the live SVG.
    Two <image>s in world space inside the same <g> (rides the one GPU transform); A/B for a 300ms idle-only crossfade.
-   Selection: plate level 0.3 -> city-night, >=0.6 -> street-day (only variants that exist; table falls back by zoom, then any).
+   Selection: plate level 0.3 -> city-day|city-night, >=0.6 -> street-day|street-night by #phone.day/body.day (only variants that exist; table falls back by zoom, then any).
    When a plate is decoded, svg.has-plate hides the SVG ground (lake/roads/blocks/filler bake); buildings, halos, turf, routes stay live on top.
    Missing plate -> no has-plate -> the old SVG bake is the fallback. */
  const PO={x:-1604,y:-2271,w:3378,h:4537},DPR=window.devicePixelRatio||1;
- const PV={city:{night:'city-night'},street:{day:'street-day'}};/* add 'day','snow-night','snow-day' here as the designer ships them */
+ const PV={city:{night:'city-night',day:'city-day','snow-night':'city-snow-night','snow-day':'city-snow-day'},street:{day:'street-day',night:'street-night','snow-night':'street-snow-night','snow-day':'street-snow-day'}};
  const plateKey=()=>{const z=P<.6?'city':'street',ph=document.getElementById('phone')||document.body,day=ph.classList.contains('day')||document.body.classList.contains('day'),sn=P0snow();
   const want=(sn?'snow-':'')+(day?'day':'night'),t=PV[z];const f=t[want]||t[day?'day':'night']||Object.values(t)[0];
   return f+((z==='city'?DPR>=1.5:DPR>=2.5)?'@3x':'')+'.jpg'};
  const pbase=(window.SD_PLATE_BASE||'plates/'),pcache={};
  const pload=f=>pcache[f]||(pcache[f]=new Promise(r=>{const im=new Image();im.src=pbase+f;(im.decode?im.decode():new Promise((a,b)=>{im.onload=a;im.onerror=b})).then(()=>r(im.src),()=>r(null))}));
- m.preloadPlates=()=>Promise.all(['city','street'].map(z=>{const sv=P;P=z==='city'?.3:.6;const k=plateKey();P=sv;return pload(k)}));
+ m.preloadPlates=()=>{const sx=(z)=>(z==='city'?DPR>=1.5:DPR>=2.5)?'@3x':'';return Promise.all(Object.entries(PV).flatMap(([z,t])=>Object.values(t).map(f=>pload(f+sx(z)+'.jpg'))))};
  const NS='http://www.w3.org/2000/svg',pg=g&&document.createElementNS(NS,'g');let pimg=[],pcur=0,pkey='';
  if(pg){pg.setAttribute('class','plate-ground');g.insertBefore(pg,g.firstChild);for(let i=0;i<2;i++){const e=document.createElementNS(NS,'image');
   for(const[k,val]of Object.entries({x:PO.x,y:PO.y,width:PO.w,height:PO.h,preserveAspectRatio:'none',opacity:0}))e.setAttribute(k,val);e.style.transition='opacity .3s';pg.appendChild(e);pimg.push(e)}}
