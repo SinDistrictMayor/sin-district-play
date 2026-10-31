@@ -737,6 +737,7 @@ input[type=range]{accent-color:var(--cream)}
 .bld.b-shooter{stroke:#C8323C!important;stroke-opacity:.95}.bld.b-politician{stroke:#6A4C7A!important;stroke-opacity:.95}
 .bld.b-npc{stroke:#8A7F78!important;stroke-opacity:.7}
 .bld.b-free,.b-free{fill:none!important;fill-opacity:0!important;stroke:#8A7F78!important;stroke-opacity:.45}
+.pins.gesturing .pin.edge{opacity:0;pointer-events:none;transition:none}
 
 /* plate owns ALL roofs (incl. free lots): fill 0, stroke only */svg.has-plate .bld,svg.has-plate .bld.reachable,svg.has-plate .b-free,.day svg.has-plate .b-free{fill-opacity:0!important}</style></head><body>
 <div class="phone velvet" id="phone">
@@ -1142,13 +1143,14 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  const placePins=()=>{L=v.s;pins.querySelectorAll('[data-x]').forEach(put)};
  /* mid-gesture: only nodes created since the last layout get a one-time placement in the current layer space; existing nodes are never touched */
  const placeNew=()=>{pins.querySelectorAll('[data-x]').forEach(p=>{if(p.dataset.pl!=String(L))put(p)})};
- const edges=()=>{if(gest||pts.size)return;if(v.s!==L)placePins();const tx=W/2-(v.x-X0)*L,ty=H/2-(v.y-Y0)*L,mg=26,top=150,bot=H-170;
+ /* edge rivals are docked in VIEW space on settle only; mid-gesture they are hidden via .pins.gesturing (kit CSS), never re-clamped or left drifting */
+ const edges=(live)=>{if(!live){if(gest||pts.size)return;if(v.s!==L)placePins()}const q=v.s/L,tx=W/2-(v.x-X0)*v.s,ty=H/2-(v.y-Y0)*v.s,mg=26,top=150,bot=H-170;
   pins.querySelectorAll('.o-rival[data-x]').forEach(p=>{let[sx,sy]=m.toView(+p.dataset.x,+p.dataset.y);const off=sx<mg||sx>W-mg||sy<top||sy>bot;p.classList.toggle('edge',off);
    if(off){const a=Math.atan2(sy-H/2,sx-W/2);sx=Math.min(W-mg,Math.max(mg,sx));sy=Math.min(bot,Math.max(top,sy));p.style.setProperty('--a',(a*180/Math.PI+90)+'deg')}
-   p.style.transform=m.pos(sx-tx,sy-ty,off?' scale(.72)':'');p.dataset.pl=L})};
+   p.style.transform=m.pos((sx-tx)/q,(sy-ty)/q,off?' scale(.72)':'');p.dataset.pl=L})};
  /* the one transform: two compositor writes per frame */
  const place=()=>{clamp();const k=v.s/P,tx=W/2-(v.x-X0)*v.s,ty=H/2-(v.y-Y0)*v.s;
-  if(svg)svg.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${k})`;const q=v.s/L;pins.style.transform=`translate3d(${tx}px,${ty}px,0)`+(q!==1?` scale(${q})`:'');pins.style.setProperty('--ik',q!==1?1/q:1);if(!(gest||pts.size)&&v.s!==L){placePins();place()}};
+  if(svg)svg.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${k})`;const q=v.s/L;pins.style.transform=`translate3d(${tx}px,${ty}px,0)`+(q!==1?` scale(${q})`:'');pins.style.setProperty('--ik',q!==1?1/q:1);if(!(gest||pts.size)&&v.s!==L){placePins();place();return}};
  /* record a plate: size the SVG to the whole city at plate scale P, world transform fixed in plate space */
  const plate=p=>{P=p;if(!svg)return;const pw=Math.ceil((X1-X0)*P),ph=Math.ceil((Y1-Y0)*P);
   Object.assign(svg.style,{inset:'auto',left:'0px',top:'0px',width:pw+'px',height:ph+'px',transformOrigin:'0 0',willChange:'transform'});svg.setAttribute('viewBox',`0 0 ${pw} ${ph}`);
@@ -1157,12 +1159,12 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
  let gest=0,timer=0,dirty=false;
  /* game-state repaint (classes, v5 pins, influence) — never during a gesture; kit paint's own g/pin transforms are overwritten in plate space */
  const commit=()=>{if(gest||pts.size){dirty=true;return}dirty=false;clamp();orig();if(g)g.setAttribute('transform',`scale(${P}) translate(${-X0} ${-Y0})`);placePins();place();edges();cz();markRange();layoutDiscs();m.onSettle&&m.onSettle()};
- const idle=()=>{gest=0;const p=plateFor(v.s);if(p!==P){plate(p);place();m.swapPlate&&m.swapPlate()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle();if(window.SDUI_map)setTimeout(loadSnow,0)};
+ const idle=()=>{gest=0;pins.classList.remove('gesturing');const p=plateFor(v.s);if(p!==P){plate(p);place();m.swapPlate&&m.swapPlate()}cz();edges();if(dirty)commit();else layoutDiscs();m.onSettle&&m.onSettle();if(window.SDUI_map)setTimeout(loadSnow,0)};
  const settle=(ms=300)=>{clearTimeout(timer);timer=setTimeout(()=>{if(pts.size)return settle(ms);idle()},ms)};
  m.paint=()=>{if(gest||pts.size){placeNew();place();return}commit()};
  const size=()=>{W=el.clientWidth;H=el.clientHeight};
  const ro=new ResizeObserver(()=>{if(!svg.isConnected){ro.disconnect();return}size();place();edges()});ro.observe(el);
- el.addEventListener('pointerdown',()=>{gest=1;clearTimeout(timer)},true);el.addEventListener('wheel',()=>{gest=1;settle(200)},{capture:true,passive:true});
+ el.addEventListener('pointerdown',()=>{gest=1;pins.classList.add('gesturing');clearTimeout(timer)},true);el.addEventListener('wheel',()=>{gest=1;pins.classList.add('gesturing');settle(200)},{capture:true,passive:true});
  addEventListener('pointerup',()=>{if(gest&&svg.isConnected)settle(120)},true);
  /* pinch-to-zoom: two pointers on the map; map.js's own drag/tap handlers are held off while pinching */
  const pts=new Map();let pin=null,hold=false;const S1=4;
@@ -1172,7 +1174,7 @@ function fastMap(m){const el=m.el,svg=el.querySelector('svg.city'),pins=m.pins,o
   if(pin&&pts.size>=2){const q=mid();v.s=Math.min(S1,Math.max(.15,pin.s*q.d/pin.d));v.x=pin.wx-(q.x-W/2)/v.s;v.y=pin.wy-(q.y-H/2)/v.s;place()}},true);
  const up=e=>{if(!svg.isConnected||!pts.delete(e.pointerId))return;if(hold){e.stopImmediatePropagation();if(pts.size<2)pin=null;if(!pts.size){hold=false;settle(120)}}};
  addEventListener('pointerup',up,true);addEventListener('pointercancel',up,true);
- m.pinchTest=(cx,cy,f)=>{const s0=v.s,w=(cx-W/2)/v.s+v.x;v.s=Math.min(S1,Math.max(.15,v.s*f));v.x=w-(cx-W/2)/v.s;gest=1;place();settle(120);return[s0,v.s]};
+ m.pinchTest=(cx,cy,f)=>{const s0=v.s,w=(cx-W/2)/v.s+v.x;v.s=Math.min(S1,Math.max(.15,v.s*f));v.x=w-(cx-W/2)/v.s;gest=1;pins.classList.add('gesturing');place();settle(120);return[s0,v.s]};
  /* snow/day re-bake of the filler image: only when idle (never mid-pan); kit bake -> SDBakeWorker (off-thread) */
  let snowWas=P0snow(),dayWas=P0day(),rebakeQ=false;function P0day(){return !!(document.getElementById('phone')?.classList.contains('day')||document.body.classList.contains('day'))}function P0snow(){return document.getElementById('phone')?.classList.contains('map-snow')||!!document.querySelector('.map-snow')}
  const rebake=()=>{if(gest||pts.size){rebakeQ=true;return}rebakeQ=false;if(typeof m.rebake==='function')m.rebake();m.swapPlate&&m.swapPlate()};
