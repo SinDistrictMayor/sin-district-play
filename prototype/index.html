@@ -1023,7 +1023,7 @@ function paintDock(cur){$('#dock').innerHTML=TABS.map(t=>`<button data-go="${t}"
 let objShown=null,objPanned=null,objHold=0,goalQ=[];
 function panTo(id){if(map&&id!=null&&B[id]){const c=B[id].c;map.center(c[0],c[1]+120)}}
 let holdPrev=null,holdBroke=0;
-function paintObjective(){const o=$('#objective'),ob=S.objective||{done:true,step:NSTEP};goalQ.push(...SD.takeGoals());
+function paintObjective(){if(moveQ&&paintMoveStrip())return;const o=$('#objective'),ob=S.objective||{done:true,step:NSTEP};goalQ.push(...SD.takeGoals());
  if(goalQ.length||performance.now()<objHold){if(performance.now()>=objHold&&goalQ.length){const g=goalQ.shift();objHold=performance.now()+1000;objShown='g'+g.n;
    o.className='objective goal-strip done';o.innerHTML=`<span class="ck">✓</span><span class="step num">${g.n}</span><span class="txt">${g.text}</span>${g.cash?`<span class="float-cash num">+${money(g.cash)}</span>`:`<span class="float-cash">${g.reward}</span>`}`;sfx('coins')}return}
  const key=ob.goal?'g'+ob.n:ob.done?'done':ob.step;
@@ -1169,12 +1169,35 @@ function layoutDiscs(){if(!map||!map.pins)return;const pins=map.pins,street=pins
   if(k==='free'&&!street&&!reach)return;C.push({id:b.id,k,reach,c:m.c})});
  C.sort((a,b)=>PRI[b.k]-PRI[a.k]);const kept=[];
  for(const d of C){const r=(d.k==='target'||d.k==='incoming'?48:44)/2;if(kept.some(q=>Math.hypot((q.c[0]-d.c[0])*s,(q.c[1]-d.c[1])*s)<r+q.r))continue;d.r=r;kept.push(d)}
- const frag=document.createDocumentFragment();for(const d of kept){const e=document.createElement('button');e.className='lot-hit '+d.k+(d.reach?' reach':'');e.dataset.x=d.c[0];e.dataset.y=d.c[1];e.dataset.hit=d.id;e.dataset.kind=d.k;
-  e.setAttribute('aria-label',B[d.id].name||'Lot');const[sx,sy]=map.toScreen(d.c[0],d.c[1]);e.style.transform=`translate3d(${sx}px,${sy}px,0)`;frag.appendChild(e)}
+ const frag=document.createDocumentFragment();for(const d of kept){const e=document.createElement('button');e.className='lot-hit '+d.k+(d.reach?' reach':'');e.dataset.x=d.c[0];e.dataset.y=d.c[1];e.dataset.hit=d.id;e.dataset.bid=d.id;e.dataset.kind=d.k;
+  e.setAttribute('aria-label',B[d.id].name||'Lot');const[sx,sy]=map.toScreen(d.c[0],d.c[1]);e.style.transform=`translate3d(${sx}px,${sy}px,0)`;/* centred by kit margin -r (placePins rewrites transform on zoom) */frag.appendChild(e)}
  pins.appendChild(frag);if(window.SDUI)SDUI.discs=kept.length}
 /* tap outcomes (game design phase 2) */
 function discAct(id,k,reach){if(k==='rival'&&SD.intelOf(S,id))return go('war/'+id);
- if(k==='free'&&reach&&selUnit!=null&&typeof moveConfirm==='function')return moveConfirm(selUnit,id);openSheet(id)}
+ if(k==='incoming')return threatSheet(id);
+ if(k==='free'&&reach&&selUnit!=null)return moveConfirm(selUnit,id);openSheet(id)}
+/* Move confirm (GD gap 1): unowned + reachable with a unit selected -> confirm on the objective strip, never the lot sheet.
+   Engine has no free-walk; "move" = buy the lot and post the selected unit there (u.at=bid). Designer owns polish. */
+let moveQ=null;
+function moveConfirm(uid,id){const u=S.units.find(x=>x.id===uid);if(!u)return openSheet(id);if($('#sheet').classList.contains('on'))closeSheet();
+ moveQ={uid,id};window.__lastMove=id;window.__lastSheet=null;vib(10);paintMoveStrip()}
+function paintMoveStrip(){const o=$('#objective'),q=moveQ;if(!q)return false;const u=S.units.find(x=>x.id===q.uid),pr=SD_PROPS[B[q.id].type],need=pr.cost-S.crews.player.cash,busy=!u||u.at==='trip';
+ o.style.display='';o.className='objective move-confirm';o.dataset.move=q.id;
+ o.innerHTML=`<span class="txt">Move ${u?u.name:'crew'} → ${short(nm(q.id))} · buy <span class="num money">${money(pr.cost)}</span></span><button class="btn primary gold" id="mvok" ${need>0||busy?'disabled':''}>Move</button><button class="btn ghost" id="mvx" aria-label="Cancel">✕</button>`;
+ $('#mvok').onclick=e=>{e.stopPropagation();const r=SD.buy(S,'player',q.id);if(res(r,`${u.name} moves into ${short(nm(q.id))}.`)){if(u.at==='pool')u.at=q.id;sfx('buy');moveQ=null;selUnit=null;markRange();drawDynamic(true);layoutDiscs();paintObjective()}};
+ $('#mvx').onclick=e=>{e.stopPropagation();moveQ=null;paintObjective()};return true}
+/* Incoming (GD gap 2): threatened lot opens the defense view: live arrival timer, guards inside, shield, HELD path (Add guards / Show me). */
+let threatTick=0;
+function threatSheet(id){const tr=S.trips.find(t=>t.crew!=='player'&&t.kind==='raid'&&t.target===id);if(!tr)return openSheet(id);
+ window.__lastSheet='threat:'+id;sel=id;markRange();vib(20);const b=S.buildings[id];
+ const draw=()=>{const t=S.trips.find(x=>x.id===tr.id),g=SD.garrison(S,id).length,sh=SD.shieldLeft(S);
+  openRaw(`<div class="sh-head threat" data-threat="${id}"><div class="tglyph" style="color:#FFB020">${IC.shooter}</div><div style="min-width:0"><div class="sh-title">${short(nm(id))}</div><div class="owner" style="color:#FFB020"><i></i>INCOMING · ${OWN[tr.crew]}</div></div></div>
+  <div class="ledger"><div><span>They hit in</span><span class="num threat-timer" id="thT">${t?eta(t.etaMin):'now'}</span></div><div><span>Coming</span><span>${tr.units.length}, maybe more</span></div>
+  <div><span>Guards inside</span><span>${g?g:'<span style="color:var(--cream)">'+C.noGuards+'</span>'}</span></div>${b.owner==='player'&&sh>0?`<div><span>Shield</span><span class="num">${Math.ceil(sh/60)}h left</span></div>`:''}
+  <div><span>To hold</span><span>${g?'Keep them inside → HELD':'Post guards before the timer runs out'}</span></div></div>
+  <div class="row2"><button class="btn ghost" id="thLot">Lot details</button><button class="btn primary" id="thG" ${b.owner!=='player'?'disabled':''}>Add guards</button></div>`);
+  $('#thG').onclick=()=>{if(res(SD.station(S,'player',id,1),'Guard posted.'))draw()};$('#thLot').onclick=()=>{clearInterval(threatTick);openSheet(id)}};
+ draw();clearInterval(threatTick);threatTick=setInterval(()=>{const el=$('#thT'),t=S.trips.find(x=>x.id===tr.id);if(!el||!$('#sheet').classList.contains('on')){clearInterval(threatTick);return}el.textContent=t?eta(t.etaMin):'now'},500)}
 {let dn=null;document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.lot-hit');dn=h&&e.isPrimary?{h,x:e.clientX,y:e.clientY,id:e.pointerId}:null;if(h)h.classList.add('press')},true);
  const cancel=()=>{if(dn){dn.h.classList.remove('press');dn=null}};
  addEventListener('pointermove',e=>{if(dn&&e.pointerId===dn.id&&Math.hypot(e.clientX-dn.x,e.clientY-dn.y)>12)cancel()},true);
@@ -1227,7 +1250,7 @@ function tripCard(tr){const mine=tr.crew==='player';openRaw(`<div class="sh-head
 const eta=m=>{const s=Math.round(m*60);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
 // ---------- building sheet ----------
 function openRaw(h){$('#sheet').innerHTML='<div class="handle"></div>'+h;$('#sheet').classList.add('on');$('#scrim').classList.add('on')}
-function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');sel=null;markRange();map&&map.paint()}
+function closeSheet(){$('#sheet').classList.remove('on');document.querySelectorAll('.scrim.on').forEach(e=>e.classList.remove('on'));sel=null;markRange();map&&map.paint()}
 function openSheet(id){const b=S.buildings[id],m=B[id];if(m.landmark)return;window.__lastSheet=id;sel=id;markRange();vib(10);if(id===tutorialHouse())SD.flag('tapped');
  const own=b.owner,col=FAM[own]||'#8A7F78',pr=SD_PROPS[m.type],intel=SD.intelOf(S,id);
  const inc=SD.incomeOf(S,id).label,sc$=SD.scoutCost(S,'player');
