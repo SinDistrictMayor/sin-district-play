@@ -1,7 +1,7 @@
 /* Sin District web test build: cache-first for hashed art/JS and the CanvasKit engine,
  * network-first for the HTML shell. Makes repeat launches near-instant and works offline
- * after the first visit. 1795841396 is stamped by scripts/build-offline-web.sh. */
-const CACHE = "sdo-1795841396";
+ * after the first visit. 1795848097 is stamped by scripts/build-offline-web.sh. */
+const CACHE = "sdo-1795848097";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
