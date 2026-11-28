@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, shrink-to-fit=no" />
-    <meta name="theme-color" content="#0D0F12" />
+    <meta name="theme-color" content="#08090A" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>Sin District Offline</title>
+    <title>Sin District</title>
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
@@ -19,7 +19,7 @@
         overflow: hidden;
         overscroll-behavior: none;
         touch-action: none;
-        background: #0D0F12;
+        background: #08090A;
       }
       /* These styles make the root element full-height */
       #root {
@@ -28,13 +28,34 @@
         flex: 1;
       }
     </style>
-  <link rel="icon" href="/sin-district-play/favicon.ico"/></head>
+  <link rel="icon" href="/sin-district-play/favicon.ico"/><style id="sdo-boot-css">
+      #sdo-boot{position:fixed;inset:0;z-index:99999;background:#08090A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .25s}
+      #sdo-boot b{font:700 20px/1 Teko,"Barlow Condensed",Arial Narrow,Arial,sans-serif;letter-spacing:3px;color:#EEF0F2}
+      #sdo-boot i{display:block;width:220px;height:6px;border:1px solid #E5232E;background:#111315;overflow:hidden}
+      #sdo-boot i u{display:block;height:100%;width:2%;background:#E5232E;transition:width .2s}
+      #sdo-boot span{font:12px/1 Arial,sans-serif;letter-spacing:2px;color:#8E959D}
+    </style>
+  </head>
 
   <body>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="/sin-district-play/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js" defer></script><script src="/sin-district-play/_expo/static/js/web/__common-be5e483a9275e23e73fd0bf320155355.js" defer></script><script src="/sin-district-play/_expo/static/js/web/index-fd2574ec56a925586c18923dbf0e5c30.js" defer></script>
+    <div id="sdo-boot"><b>SIN DISTRICT</b><i><u id="sdo-boot-bar"></u></i><span id="sdo-boot-label">LOADING</span></div>
+    <script>
+      window.__sdoBoot=function(p,l){var b=document.getElementById('sdo-boot-bar');if(b)b.style.width=Math.max(2,Math.min(100,Math.round(p*100)))+'%';var t=document.getElementById('sdo-boot-label');if(t&&l)t.textContent=l.toUpperCase();};
+      window.__sdoBootDone=function(){var e=document.getElementById('sdo-boot');if(!e)return;e.style.opacity='0';setTimeout(function(){e.remove()},300);};
+      setTimeout(function(){window.__sdoBootDone&&window.__sdoBootDone()},45000);
+      window.__sdoWasm=fetch('/sin-district-play/canvaskit.wasm').then(function(r){
+        if(!r.ok||!r.body)return undefined;
+        var enc=r.headers.get('content-encoding'),len=+r.headers.get('content-length')||0,total=(!enc&&len)?len:8076553,got=0,rd=r.body.getReader();
+        return (function pump(){return rd.read().then(function(x){
+          if(x.done)return true;
+          got+=x.value.length;window.__sdoBoot(Math.min(.95,got/total)*.6,'Starting the engine');return pump()})})();
+      }).catch(function(){return undefined});
+    </script>
+  <script src="/sin-district-play/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js" defer></script><script src="/sin-district-play/_expo/static/js/web/__common-f6ee39123acd882ff3aa8e7e224c61f3.js" defer></script><script src="/sin-district-play/_expo/static/js/web/index-cf7a536cd951f90ba4be4a1593c383cb.js" defer></script>
+<script>if('serviceWorker' in navigator&&location.protocol!=='file:'&&!/[?&]nosw/.test(location.search)){window.addEventListener('load',function(){navigator.serviceWorker.register('/sin-district-play/sw.js').catch(function(){})})}</script>
 </body>
 </html>
